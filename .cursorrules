@@ -58,6 +58,23 @@ claude-auto-worker/
 - 다른 프로젝트와 포트 충돌 시 환경변수 `PORT` 사용
 - 모든 API 변경사항은 문서화 필수
 
+## 🔧 개발 도구 및 워크플로우
+
+### GitHub CLI 사용
+- **항상 GitHub CLI (`gh`)를 사용하여 저장소 관리**
+- `gh repo create` - 새 저장소 생성
+- `gh repo clone` - 저장소 클론
+- `gh repo view` - 저장소 정보 확인
+- `gh pr create` - Pull Request 생성
+- `gh issue create` - 이슈 생성
+- `gh workflow run` - GitHub Actions 워크플로우 실행
+
+### Agent 디렉토리 활용
+- **AI Agent 관련 파일들은 `agent/` 디렉토리에 배치**
+- 새로운 AI Agent 생성 시: `agent/agent-name.md` 형식으로 작성
+- 기존 Agent 파일 수정 시: `agent/` 디렉토리 내에서 작업
+- Agent 간 협업 시: `agent/` 디렉토리 내 파일들을 참조하여 통합
+
 ## 📝 코드 예시
 
 ### 기본 컨트롤러 구조
