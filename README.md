@@ -67,6 +67,11 @@ claude-auto-worker/
 
 ## 🚀 빠른 시작
 
+### 🔧 핵심 설정
+- **기본 포트**: 5849
+- **API 엔드포인트**: http://localhost:5849/api
+- **개발 서버**: http://localhost:5849
+
 ### 필수 요구사항
 
 - **Node.js** 18.x 이상
@@ -88,7 +93,7 @@ cp .env.example .env
 # .env 파일에 CLAUDE_API_KEY 설정
 
 # 개발 서버 실행
-npm run dev
+npm run start:dev
 ```
 
 ### 기본 사용법
@@ -98,6 +103,14 @@ npm run dev
 claude-auto-worker run workflow.yaml
 
 # 상태 확인
+claude-auto-worker status
+
+# 개발 서버 실행 (포트 5849)
+npm run start:dev
+
+# API 서버 접속
+curl http://localhost:5849/api/health
+```
 claude-auto-worker status
 
 # 로그 보기

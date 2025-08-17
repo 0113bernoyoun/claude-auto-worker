@@ -1,0 +1,104 @@
+# Claude Auto Worker - Cursor Development Rules
+
+## 🚀 프로젝트 개요
+- **프로젝트명**: claude-auto-worker
+- **설명**: 차세대 Claude Code 자동화 도구 - 안전하고, 유연하고, 확장 가능한 워크플로우 엔진
+- **기술 스택**: NestJS, Next.js, TypeScript, Node.js
+
+## 🔧 핵심 설정
+- **포트**: 5849 (기본값)
+- **API 엔드포인트**: http://localhost:5849/api
+- **개발 서버**: http://localhost:5849
+- **빌드 출력**: ./dist
+
+## 📁 프로젝트 구조
+```
+claude-auto-worker/
+├── src/
+│   ├── app.module.ts          # 루트 모듈
+│   ├── app.controller.ts      # 루트 컨트롤러
+│   ├── app.service.ts         # 루트 서비스
+│   ├── main.ts               # 애플리케이션 진입점
+│   ├── core/                 # 핵심 기능 모듈
+│   ├── cli/                  # CLI 관련 모듈
+│   ├── dashboard/            # Next.js 대시보드
+│   ├── git/                  # Git 통합 모듈
+│   ├── parser/               # 파싱 관련 모듈
+│   ├── shared/               # 공유 유틸리티
+│   └── config/               # 설정 모듈
+├── tests/                    # 테스트 파일들
+├── docs/                     # 문서
+└── tools/                    # 개발 도구
+```
+
+## 🎯 개발 가이드라인
+
+### NestJS 모듈 생성 시
+- 모든 모듈은 `@Module()` 데코레이터 사용
+- 의존성 주입을 위한 `@Injectable()` 데코레이터 사용
+- 컨트롤러는 `@Controller()` 데코레이터 사용
+
+### 포트 사용
+- **항상 포트 5849를 기본값으로 사용**
+- 환경변수 `PORT`로 오버라이드 가능
+- 다른 포트 사용 시 반드시 문서화
+
+### API 설계
+- 모든 API 엔드포인트는 `/api` 프리픽스 사용
+- RESTful API 설계 원칙 준수
+- 적절한 HTTP 상태 코드 사용
+
+### TypeScript 설정
+- strict 모드 활성화
+- 데코레이터 메타데이터 활성화
+- 경로 별칭 사용 (`@/*`, `@shared/*`, `@core/*` 등)
+
+## 🚨 주의사항
+- 포트 5849는 이 프로젝트 전용으로 예약됨
+- 다른 프로젝트와 포트 충돌 시 환경변수 `PORT` 사용
+- 모든 API 변경사항은 문서화 필수
+
+## 📝 코드 예시
+
+### 기본 컨트롤러 구조
+```typescript
+import { Controller, Get } from '@nestjs/common';
+
+@Controller('example')
+export class ExampleController {
+  @Get()
+  findAll(): string {
+    return 'This action returns all examples';
+  }
+}
+```
+
+### 기본 서비스 구조
+```typescript
+import { Injectable } from '@nestjs/common';
+
+@Injectable()
+export class ExampleService {
+  findAll(): string[] {
+    return ['example1', 'example2'];
+  }
+}
+```
+
+### 환경변수 설정
+```typescript
+// .env 파일
+PORT=5849
+NODE_ENV=development
+```
+
+## 🔍 디버깅 및 테스트
+- `npm run start:dev`: 개발 모드 실행 (포트 5849)
+- `npm run build`: 프로덕션 빌드
+- `npm run test`: 단위 테스트 실행
+- `npm run test:e2e`: E2E 테스트 실행
+
+## 📚 참고 자료
+- NestJS 공식 문서: https://docs.nestjs.com/
+- TypeScript 핸드북: https://www.typescriptlang.org/docs/
+- 프로젝트 문서: ./docs/ 디렉토리
