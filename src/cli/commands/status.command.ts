@@ -20,7 +20,7 @@ export class StatusCommand extends CommandRunner {
     description: 'Show status for all workflows',
   })
   parseAll(val: string): boolean {
-    return val === 'true';
+    return val === undefined || val === 'true';
   }
 
   @Option({

@@ -13,7 +13,7 @@ export class RunCommand extends CommandRunner {
     description: 'Enable debug mode',
   })
   parseDebug(val: string): boolean {
-    return val === 'true';
+    return val === undefined || val === 'true';
   }
 
   @Option({
@@ -29,7 +29,7 @@ export class RunCommand extends CommandRunner {
     description: 'Show what would be executed without running',
   })
   parseDryRun(val: string): boolean {
-    return val === 'true';
+    return val === undefined || val === 'true';
   }
 
   async run(passedParams: string[], options?: Record<string, any>): Promise<void> {

@@ -13,7 +13,7 @@ export class LogsCommand extends CommandRunner {
     description: 'Follow log output in real-time',
   })
   parseFollow(val: string): boolean {
-    return val === 'true';
+    return val === undefined || val === 'true';
   }
 
   @Option({
