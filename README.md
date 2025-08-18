@@ -120,6 +120,11 @@ claude-auto-worker logs --tail
 claude-auto-worker create refactor
 ```
 
+## 진행상황
+
+- 2025-08-18: TASK-001 완료 - 프로젝트 초기화 및 디렉토리 구조 설정
+- 2025-08-18: TASK-002 완료 - NestJS 프로젝트 생성 및 기본 설정
+
 ## 📝 워크플로우 예제
 
 ### 기본 워크플로우

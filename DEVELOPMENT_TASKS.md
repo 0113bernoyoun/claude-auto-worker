@@ -20,20 +20,20 @@
 - **담당 영역**: 프로젝트 관리
 - **의존성**: 없음
 - **완료 기준**: 
-  - [ ] 프로젝트 루트 디렉토리 생성
-  - [ ] src/, docs/, tests/ 디렉토리 구조 생성
-  - [ ] .gitignore 파일 설정
-  - [ ] README.md 초기 버전 작성
+  - [x] 프로젝트 루트 디렉토리 생성
+  - [x] src/, docs/, tests/ 디렉토리 구조 생성
+  - [x] .gitignore 파일 설정
+  - [x] README.md 초기 버전 작성
 
 #### TASK-002: NestJS 프로젝트 생성 및 기본 설정
 - **예상 시간**: 6시간
 - **담당 영역**: 백엔드 개발
 - **의존성**: TASK-001
 - **완료 기준**:
-  - [ ] NestJS CLI 설치 및 프로젝트 생성
-  - [ ] package.json 설정 완료
-  - [ ] 기본 모듈 구조 생성
-  - [ ] TypeScript 설정 완료
+  - [x] NestJS CLI 설치 및 프로젝트 생성
+  - [x] package.json 설정 완료
+  - [x] 기본 모듈 구조 생성
+  - [x] TypeScript 설정 완료
 
 #### TASK-003: TypeScript 설정 및 개발 도구 구성
 - **예상 시간**: 4시간
