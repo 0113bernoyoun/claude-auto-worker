@@ -69,6 +69,13 @@ claude-auto-worker/
 - `gh issue create` - 이슈 생성
 - `gh workflow run` - GitHub Actions 워크플로우 실행
 
+### Pull Request 워크플로우
+- **새로운 기능/수정 시 반드시 새 브랜치 생성**
+- `git checkout -b feature/기능명` 또는 `git checkout -b fix/수정명`
+- 작업 완료 후 `gh pr create`로 Pull Request 생성
+- **main 브랜치에 직접 커밋 금지**
+- PR 리뷰 후 merge 진행
+
 ### Agent 디렉토리 활용
 - **AI Agent 관련 파일들은 `agent/` 디렉토리에 배치**
 - 새로운 AI Agent 생성 시: `agent/agent-name.md` 형식으로 작성
