@@ -40,10 +40,10 @@
 - **담당 영역**: 개발 환경
 - **의존성**: TASK-002
 - **완료 기준**:
-  - [ ] tsconfig.json 설정 완료
-  - [ ] ESLint 설정 및 규칙 정의
-  - [ ] Prettier 설정 및 포맷팅 규칙
-  - [ ] VS Code 설정 파일 생성
+  - [x] tsconfig.json 설정 완료
+  - [x] ESLint 설정 및 규칙 정의
+  - [x] Prettier 설정 및 포맷팅 규칙
+  - [x] VS Code 설정 파일 생성
 
 ### 🟡 보통 우선순위 태스크
 
