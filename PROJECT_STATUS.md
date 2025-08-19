@@ -24,6 +24,7 @@
   - ✅ TASK-012 완료: CLI 테스트 환경 구성 (Jest 설정, 테스트 커버리지, 모킹)
   - ✅ TASK-013 완료: CLI 문서화 및 사용자 가이드
   - ✅ TASK-014 완료: YAML/JSON 파서 기본 구조 구현 (CLI 통합, 테스트 45/45 통과)
+  - ✅ TASK-015 완료: 워크플로우 스키마 검증 시스템 (Ajv 기반, 커스텀 uniqueStepIds 포함)
   - ✅ PR #9 머지: `DEVELOPMENT_TASKS.md`에 "프로토타입 Fast-Track" 섹션 추가 (데모 최단 경로 정리)
   - ✅ PR #10 머지: 파서 통합 및 CLI 테스트 안정화
 
