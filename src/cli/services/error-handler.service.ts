@@ -1,14 +1,15 @@
 import { Injectable, Logger } from '@nestjs/common';
 import chalk from 'chalk';
 import {
-  CLIError,
-  CLIValidationError,
-  ConfigurationError,
-  FileSystemError,
-  NetworkError,
-  PermissionError,
-  UnknownError,
-  WorkflowError,
+    CLIError,
+    CLIValidationError,
+    ConfigurationError,
+    ERROR_CODES,
+    FileSystemError,
+    NetworkError,
+    PermissionError,
+    UnknownError,
+    WorkflowError,
 } from '../errors/cli-errors';
 
 export interface ErrorDisplayOptions {
@@ -112,27 +113,27 @@ export class ErrorHandlerService {
 
     if (this.isCLIError(error)) {
       switch (error.code) {
-        case 'CLI_VALIDATION_ERROR':
+        case ERROR_CODES.CLI_VALIDATION:
           console.error(chalk.cyan('   • Check command syntax and options'));
           console.error(chalk.cyan('   • Use --help for command usage'));
           break;
-        case 'FILE_SYSTEM_ERROR':
+        case ERROR_CODES.FILE_SYSTEM:
           console.error(chalk.cyan('   • Verify file paths and permissions'));
           console.error(chalk.cyan('   • Check disk space and file existence'));
           break;
-        case 'WORKFLOW_ERROR':
+        case ERROR_CODES.WORKFLOW:
           console.error(chalk.cyan('   • Validate workflow configuration'));
           console.error(chalk.cyan('   • Check required dependencies'));
           break;
-        case 'CONFIGURATION_ERROR':
+        case ERROR_CODES.CONFIGURATION:
           console.error(chalk.cyan('   • Verify configuration file format'));
           console.error(chalk.cyan('   • Check environment variables'));
           break;
-        case 'NETWORK_ERROR':
+        case ERROR_CODES.NETWORK:
           console.error(chalk.cyan('   • Check internet connection'));
           console.error(chalk.cyan('   • Verify API endpoints and keys'));
           break;
-        case 'PERMISSION_ERROR':
+        case ERROR_CODES.PERMISSION:
           console.error(chalk.cyan('   • Check file/directory permissions'));
           console.error(chalk.cyan('   • Run with appropriate privileges'));
           break;
@@ -167,7 +168,7 @@ export class ErrorHandlerService {
       | 'network'
       | 'permission'
       | 'unknown' = 'unknown',
-    context?: Record<string, any>
+    context?: Record<string, unknown>
   ): CLIError {
     const message = error.message || 'An error occurred';
 
@@ -203,7 +204,7 @@ export class ErrorHandlerService {
   /**
    * 에러에 대한 상세 정보 반환
    */
-  getErrorDetails(error: Error | CLIError): Record<string, any> {
+  getErrorDetails(error: Error | CLIError): Record<string, unknown> {
     const base = {
       name: error.name,
       message: error.message,

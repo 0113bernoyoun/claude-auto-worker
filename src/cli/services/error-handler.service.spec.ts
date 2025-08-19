@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import {
     CLIValidationError,
     ConfigurationError,
+    ERROR_CODES,
     FileSystemError,
     NetworkError,
     PermissionError,
@@ -44,7 +45,7 @@ describe('ErrorHandlerService', () => {
       });
 
       expect(cliError).toBeInstanceOf(CLIValidationError);
-      expect(cliError.code).toBe('CLI_VALIDATION_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.CLI_VALIDATION);
       expect(cliError.message).toBe('Validation failed');
       expect(cliError.context).toEqual({
         field: 'workflow-file',
@@ -60,7 +61,7 @@ describe('ErrorHandlerService', () => {
       });
 
       expect(cliError).toBeInstanceOf(FileSystemError);
-      expect(cliError.code).toBe('FILE_SYSTEM_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.FILE_SYSTEM);
     });
 
     it('should create WorkflowError', () => {
@@ -71,7 +72,7 @@ describe('ErrorHandlerService', () => {
       });
 
       expect(cliError).toBeInstanceOf(WorkflowError);
-      expect(cliError.code).toBe('WORKFLOW_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.WORKFLOW);
     });
 
     it('should create ConfigurationError', () => {
@@ -82,7 +83,7 @@ describe('ErrorHandlerService', () => {
       });
 
       expect(cliError).toBeInstanceOf(ConfigurationError);
-      expect(cliError.code).toBe('CONFIGURATION_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.CONFIGURATION);
     });
 
     it('should create NetworkError', () => {
@@ -93,7 +94,7 @@ describe('ErrorHandlerService', () => {
       });
 
       expect(cliError).toBeInstanceOf(NetworkError);
-      expect(cliError.code).toBe('NETWORK_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.NETWORK);
     });
 
     it('should create PermissionError', () => {
@@ -104,7 +105,7 @@ describe('ErrorHandlerService', () => {
       });
 
       expect(cliError).toBeInstanceOf(PermissionError);
-      expect(cliError.code).toBe('PERMISSION_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.PERMISSION);
     });
 
     it('should create UnknownError by default', () => {
@@ -112,7 +113,7 @@ describe('ErrorHandlerService', () => {
       const cliError = service.createCLIError(originalError);
 
       expect(cliError).toBeInstanceOf(UnknownError);
-      expect(cliError.code).toBe('UNKNOWN_ERROR');
+      expect(cliError.code).toBe(ERROR_CODES.UNKNOWN);
       expect(cliError.isOperational).toBe(false);
     });
   });
@@ -142,7 +143,7 @@ describe('ErrorHandlerService', () => {
       expect(details).toMatchObject({
         name: 'CLIValidationError',
         message: 'Test error',
-        code: 'CLI_VALIDATION_ERROR',
+        code: ERROR_CODES.CLI_VALIDATION,
         isOperational: true,
         context: { field: 'test' },
       });
@@ -183,7 +184,7 @@ describe('ErrorHandlerService', () => {
       const calls = consoleSpy.mock.calls.flat().join(' ');
       expect(calls).toContain('RED:❌ Error occurred:');
       expect(calls).toContain('WHITE:   Test error');
-      expect(calls).toContain('GRAY:   Code: CLI_VALIDATION_ERROR');
+      expect(calls).toContain(`GRAY:   Code: ${ERROR_CODES.CLI_VALIDATION}`);
       expect(calls).toContain('💡 Suggestions:');
       expect(calls).toContain('Check command syntax and options');
     });

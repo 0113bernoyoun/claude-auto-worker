@@ -38,7 +38,11 @@ export class RunCommand extends CommandRunner {
     return val === undefined || val === 'true';
   }
 
-  async run(passedParams: string[], options?: Record<string, any>): Promise<void> {
+  async run(passedParams: string[], options?: {
+    debug?: boolean;
+    output?: string;
+    dryRun?: boolean;
+  }): Promise<void> {
     try {
       const [workflowFile] = passedParams;
 
@@ -88,8 +92,28 @@ export class RunCommand extends CommandRunner {
         if (!this.errorHandler.isRecoverable(error)) {
           process.exit(1);
         }
+      } else if (typeof error === 'string') {
+        // 문자열 에러 처리
+        const stringError = new Error(error);
+        this.errorHandler.handleError(stringError, {
+          showStackTrace: isDebugMode,
+          showContext: true,
+          showErrorCode: true,
+          showHelp: true,
+        });
+        process.exit(1);
+      } else if (error && typeof error === 'object') {
+        // 객체 에러 처리
+        const objectError = new Error(`Object error: ${JSON.stringify(error)}`);
+        this.errorHandler.handleError(objectError, {
+          showStackTrace: isDebugMode,
+          showContext: true,
+          showErrorCode: true,
+          showHelp: true,
+        });
+        process.exit(1);
       } else {
-        // 알 수 없는 에러 타입 처리
+        // 완전히 알 수 없는 에러 타입 처리
         const unknownError = new Error('An unknown error occurred');
         this.errorHandler.handleError(unknownError, {
           showStackTrace: isDebugMode,
@@ -107,25 +131,59 @@ export class RunCommand extends CommandRunner {
    */
   private async executeWorkflow(
     workflowFile: string,
-    options?: Record<string, any>
-  ): Promise<void> {
-    // 시뮬레이션된 지연
-    await new Promise(resolve => setTimeout(resolve, 1000));
-
-    // 시뮬레이션된 에러 (테스트용)
-    if (workflowFile === 'error.yml') {
-      throw new WorkflowError('Simulated workflow execution error', {
-        workflow: workflowFile,
-        step: 'execution',
-        reason: 'This is a test error for demonstration',
-      });
+    options?: {
+      debug?: boolean;
+      output?: string;
+      dryRun?: boolean;
     }
+  ): Promise<void> {
+    // AbortController를 사용하여 타이머 정리
+    const abortController = new AbortController();
+    const { signal } = abortController;
 
-    // 시뮬레이션된 성공
-    console.log('📝 Processing workflow steps...');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('🔧 Executing Claude API calls...');
-    await new Promise(resolve => setTimeout(resolve, 500));
-    console.log('💾 Saving results...');
+    try {
+      // 시뮬레이션된 지연 (AbortController와 함께)
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 1000);
+        signal.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Workflow execution aborted'));
+        });
+      });
+
+      // 시뮬레이션된 에러 (테스트용)
+      if (workflowFile === 'error.yml') {
+        throw new WorkflowError('Simulated workflow execution error', {
+          workflow: workflowFile,
+          step: 'execution',
+          reason: 'This is a test error for demonstration',
+        });
+      }
+
+      // 시뮬레이션된 성공
+      console.log('📝 Processing workflow steps...');
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 500);
+        signal.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Workflow execution aborted'));
+        });
+      });
+      
+      console.log('🔧 Executing Claude API calls...');
+      await new Promise((resolve, reject) => {
+        const timeout = setTimeout(resolve, 500);
+        signal.addEventListener('abort', () => {
+          clearTimeout(timeout);
+          reject(new Error('Workflow execution aborted'));
+        });
+      });
+      
+      console.log('💾 Saving results...');
+    } catch (error) {
+      // 에러 발생 시 타이머 정리
+      abortController.abort();
+      throw error;
+    }
   }
 }
