@@ -207,10 +207,11 @@ claude-auto-worker/
   - 문서화 및 주석 완성도 검토
   - 프로젝트 규칙 준수 여부 검토
 - **리뷰 결과**: 
-  - GitHub PR 코멘트로 자동 등록
+  - **GitHub PR 코멘트로 자동 등록** (`gh pr comment` 명령어 사용)
   - 머지 가능 여부 판단 (Ready to merge / Needs changes / Blocking)
   - 구체적인 액션 아이템 제시
   - 코드 개선 제안 (필요 시)
+  - **리뷰 형식**: .cursorrules의 코드리뷰 코멘트 규칙 준수
 
 ### 코드리뷰 실행 트리거
 - **자동 실행**: PR 생성 직후, 코드 변경 시, 사용자 요청 시
