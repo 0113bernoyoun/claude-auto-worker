@@ -10,14 +10,14 @@ import { Command, CommandRunner } from 'nest-commander';
 export class HelpCommand extends CommandRunner {
   async run(passedParams: string[]): Promise<void> {
     const [command] = passedParams;
-    
+
     if (command) {
       this.showCommandHelp(command);
     } else {
       this.showGeneralHelp();
     }
   }
-  
+
   private showGeneralHelp(): void {
     console.log('🚀 Claude Auto Worker CLI');
     console.log('========================');
@@ -37,7 +37,7 @@ export class HelpCommand extends CommandRunner {
     console.log('For more information about a command, use:');
     console.log('  claude-auto-worker help <command>');
   }
-  
+
   private showCommandHelp(command: string): void {
     switch (command.toLowerCase()) {
       case 'run':
@@ -52,7 +52,7 @@ export class HelpCommand extends CommandRunner {
         console.log('  --dry-run             Show what would be executed without running');
         console.log('  -h, --help            Show help for this command');
         break;
-        
+
       case 'status':
         console.log('Usage: claude-auto-worker status [options]');
         console.log('');
@@ -62,7 +62,7 @@ export class HelpCommand extends CommandRunner {
         console.log('  -f, --format <format> Output format (json, table, simple)');
         console.log('  -h, --help            Show help for this command');
         break;
-        
+
       case 'logs':
         console.log('Usage: claude-auto-worker logs [workflow-id] [options]');
         console.log('');
@@ -86,7 +86,7 @@ export class HelpCommand extends CommandRunner {
         console.log('  -f, --force            Overwrite existing file (init)');
         console.log('  -h, --help             Show help for this command');
         break;
-        
+
       default:
         console.log(`Unknown command: ${command}`);
         console.log('Use "claude-auto-worker help" to see available commands');

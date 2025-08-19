@@ -52,7 +52,9 @@ const schema = Joi.object<ProjectConfig>({
   dashboard: Joi.object({
     enabled: Joi.boolean().default(true),
   }).default(),
-  environments: Joi.object().pattern(/^[a-zA-Z0-9_-]+$/, Joi.object({}).unknown(true)).optional(),
+  environments: Joi.object()
+    .pattern(/^[a-zA-Z0-9_-]+$/, Joi.object({}).unknown(true))
+    .optional(),
 }).unknown(false);
 
 @Injectable()
@@ -83,7 +85,9 @@ export class ProjectConfigService {
   }
 
   loadConfig(cwd?: string): ProjectConfig {
-    if (this.cached) return this.cached;
+    if (this.cached) {
+      return this.cached;
+    }
 
     const configPath = this.getConfigPath(cwd);
     this.cachedPath = configPath;
@@ -104,7 +108,7 @@ export class ProjectConfigService {
       ...(loaded as ProjectConfig),
     };
 
-    if (env && loaded && typeof loaded === 'object' && (loaded as any).environments && (loaded as any).environments[env]) {
+    if (env && loaded && typeof loaded === 'object' && (loaded as any).environments?.[env]) {
       merged = {
         ...merged,
         ...((loaded as any).environments[env] as Partial<ProjectConfig>),
@@ -116,11 +120,11 @@ export class ProjectConfigService {
       allowUnknown: false,
     });
     if (error) {
-      const msg = error.details.map((d) => d.message).join('; ');
+      const msg = error.details.map(d => d.message).join('; ');
       throw new Error(`Invalid configuration: ${msg}`);
     }
 
-    this.cached = value as ProjectConfig;
+    this.cached = value;
     return this.cached;
   }
 
@@ -129,7 +133,9 @@ export class ProjectConfigService {
   }
 
   getResolvedPath(): string | null {
-    if (this.cachedPath) return this.cachedPath;
+    if (this.cachedPath) {
+      return this.cachedPath;
+    }
     this.cachedPath = this.getConfigPath();
     return this.cachedPath;
   }
@@ -169,5 +175,3 @@ export class ProjectConfigService {
     return dest;
   }
 }
-
-

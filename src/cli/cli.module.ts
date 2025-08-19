@@ -6,6 +6,7 @@ import { HelpCommand } from './commands/help.command';
 import { LogsCommand } from './commands/logs.command';
 import { RunCommand } from './commands/run.command';
 import { StatusCommand } from './commands/status.command';
+import { ErrorHandlerService } from './services/error-handler.service';
 
 @Module({
   imports: [CommandRunnerModule],
@@ -17,6 +18,7 @@ import { StatusCommand } from './commands/status.command';
     HelpCommand,
     ConfigCommand,
     ProjectConfigService,
+    ErrorHandlerService,
   ],
   exports: [
     RunCommand,
@@ -25,6 +27,7 @@ import { StatusCommand } from './commands/status.command';
     HelpCommand,
     ConfigCommand,
     ProjectConfigService,
+    ErrorHandlerService,
   ],
 })
 export class CliModule {}
