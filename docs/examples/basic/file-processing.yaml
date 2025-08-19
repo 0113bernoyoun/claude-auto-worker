@@ -1,0 +1,25 @@
+name: "파일 처리 워크플로우"
+description: "텍스트 파일을 읽고 Claude로 분석하는 예제"
+
+variables:
+  input_file: "input.txt"
+  output_dir: "./output"
+
+stages:
+  - name: "디렉토리 준비"
+    prompt: "출력 디렉토리를 생성하겠습니다."
+    run: "mkdir -p {{output_dir}}"
+    
+  - name: "파일 읽기"
+    prompt: "입력 파일의 내용을 읽어서 분석해주세요."
+    run: "cat {{input_file}} > {{output_dir}}/input_content.txt"
+    
+  - name: "Claude 분석"
+    prompt: |
+      다음 텍스트 파일의 내용을 분석하여 주요 키워드와 요약을 제공해주세요:
+      {{input_data}}
+    run: "echo '{{claude_response}}' > {{output_dir}}/analysis.txt"
+    
+  - name: "결과 정리"
+    prompt: "분석 결과를 간단하게 요약해주세요."
+    run: "echo '분석이 완료되었습니다.' && ls -la {{output_dir}}"
