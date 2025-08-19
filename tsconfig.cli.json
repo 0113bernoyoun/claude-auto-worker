@@ -5,15 +5,22 @@
     "module": "commonjs",
     "verbatimModuleSyntax": false,
     "target": "ES2022",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    // NestJS 데코레이터 지원을 위한 설정
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "strict": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true
   },
   "include": [
-    "src/cli/**/*"
+    "src/cli/**/*",
+    "tests/unit/cli/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "test",
-    "tests"
+    "test"
   ]
 }
