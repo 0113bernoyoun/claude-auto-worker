@@ -42,16 +42,16 @@ export class LogsCommand extends CommandRunner {
 
   async run(passedParams: string[], options?: Record<string, any>): Promise<void> {
     const [workflowId] = passedParams;
-    
+
     console.log('📝 Claude Workflow Logs');
     console.log('=======================');
-    
+
     if (workflowId) {
       console.log(`Workflow ID: ${workflowId}`);
     } else {
       console.log('All Workflows');
     }
-    
+
     console.log(`Lines: ${options?.lines || '50'}`);
     console.log(`Level: ${options?.level || 'info'}`);
     if (options?.since) {
@@ -60,7 +60,7 @@ export class LogsCommand extends CommandRunner {
     if (options?.follow) {
       console.log('Following logs in real-time...');
     }
-    
+
     // TODO: Implement actual log retrieval logic
     console.log('');
     console.log('2024-01-15 10:30:00 [INFO] Workflow started');
@@ -68,7 +68,7 @@ export class LogsCommand extends CommandRunner {
     console.log('2024-01-15 10:30:10 [INFO] Processing stage 1/3');
     console.log('2024-01-15 10:30:15 [INFO] Stage 1 completed successfully');
     console.log('2024-01-15 10:30:20 [INFO] Processing stage 2/3');
-    
+
     if (options?.follow) {
       console.log('... waiting for new logs ...');
     }

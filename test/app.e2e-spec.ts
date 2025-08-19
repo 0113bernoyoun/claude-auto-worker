@@ -31,13 +31,11 @@ describe('AppController (e2e)', () => {
     return request(app.getHttpServer())
       .get('/api/health')
       .expect(200)
-      .expect((res) => {
+      .expect(res => {
         expect(res.body).toHaveProperty('status');
         expect(res.body).toHaveProperty('timestamp');
         expect(res.body.status).toBe('healthy');
         expect(new Date(res.body.timestamp)).toBeInstanceOf(Date);
       });
   });
-
-
 });

@@ -34,7 +34,7 @@ export class StatusCommand extends CommandRunner {
   async run(passedParams: string[], options?: Record<string, any>): Promise<void> {
     console.log('📊 Claude Workflow Status');
     console.log('========================');
-    
+
     if (options?.workflow) {
       console.log(`Workflow ID: ${options.workflow}`);
       // TODO: Implement specific workflow status logic
@@ -53,7 +53,7 @@ export class StatusCommand extends CommandRunner {
       console.log('  - workflow-001: Completed (2 minutes ago)');
       console.log('  - workflow-002: Running (5 minutes ago)');
     }
-    
+
     console.log(`Output format: ${options?.format || 'table'}`);
   }
 }
