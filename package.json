@@ -19,6 +19,9 @@
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json",
+    "test:cli": "jest --config ./jest.cli.config.js",
+    "test:cli:watch": "jest --config ./jest.cli.config.js --watch",
+    "test:cli:cov": "jest --config ./jest.cli.config.js --coverage",
     "cli:build": "tsc -p tsconfig.cli.json",
     "cli:dev": "ts-node src/cli/main.ts",
     "dashboard:dev": "next dev",
@@ -91,7 +94,10 @@
       "**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
-    "testEnvironment": "node"
+    "testEnvironment": "node",
+    "transformIgnorePatterns": [
+      "node_modules/(?!(chalk|#ansi-styles|#supports-color)/)"
+    ]
   },
   "keywords": [
     "claude",

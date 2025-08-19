@@ -21,7 +21,7 @@ export interface ErrorDisplayOptions {
 
 @Injectable()
 export class ErrorHandlerService {
-  private readonly logger = new Logger(ErrorHandlerService.name);
+  constructor(private readonly logger: Logger) {}
 
   /**
    * 에러를 처리하고 사용자 친화적인 메시지를 출력
