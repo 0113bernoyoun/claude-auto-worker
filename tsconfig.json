@@ -21,7 +21,7 @@
     "noImplicitReturns": true,
     "noImplicitOverride": true,
     "noUncheckedIndexedAccess": true,
-    "verbatimModuleSyntax": true,
+    "verbatimModuleSyntax": false,
     "paths": {
       "@/*": ["src/*"],
       "@shared/*": ["src/shared/*"],

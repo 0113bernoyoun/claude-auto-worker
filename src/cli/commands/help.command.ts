@@ -27,6 +27,7 @@ export class HelpCommand extends CommandRunner {
     console.log('  run <workflow-file>     Run a Claude workflow');
     console.log('  status                  Show workflow status');
     console.log('  logs [workflow-id]      Show workflow logs');
+    console.log('  config [action]         Manage configuration (show|path|init)');
     console.log('  help [command]          Show help information');
     console.log('');
     console.log('Global options:');
@@ -74,6 +75,16 @@ export class HelpCommand extends CommandRunner {
         console.log('  --since <time>        Show logs since time (e.g., "2h", "1d")');
         console.log('  --level <level>       Log level filter (debug, info, warn, error)');
         console.log('  -h, --help            Show help for this command');
+        break;
+
+      case 'config':
+        console.log('Usage: claude-auto-worker config [show|path|init] [options]');
+        console.log('');
+        console.log('Options:');
+        console.log('  -e, --env <name>       Environment name to preview');
+        console.log('  -o, --output <path>    Output path for template (init)');
+        console.log('  -f, --force            Overwrite existing file (init)');
+        console.log('  -h, --help             Show help for this command');
         break;
         
       default:
