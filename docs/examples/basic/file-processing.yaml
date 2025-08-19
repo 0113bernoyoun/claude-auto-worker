@@ -1,0 +1,97 @@
+name: "파일 처리 워크플로우"
+description: "파일 읽기, 분석, 변환을 위한 실용적인 워크플로우 예제"
+version: "1.0.0"
+
+variables:
+  api_key: "${CLAUDE_API_KEY}"
+  model: "claude-3-sonnet-20240229"
+  temperature: 0.3
+  input_file: "${INPUT_FILE}"
+  output_format: "${OUTPUT_FORMAT:-markdown}"
+
+steps:
+  - id: "file-read"
+    name: "파일 읽기"
+    type: "input"
+    description: "입력 파일을 읽어서 내용을 가져옵니다"
+    source: "${input_file}"
+    encoding: "utf-8"
+
+  - id: "content-analysis"
+    name: "내용 분석"
+    type: "claude"
+    prompt: |
+      다음 파일 내용을 분석해주세요:
+      
+      파일 내용:
+      ${file_read.content}
+      
+      분석 요구사항:
+      1. 파일의 주요 내용과 목적 파악
+      2. 코드인 경우 언어, 프레임워크, 구조 분석
+      3. 문서인 경우 주제, 구조, 핵심 포인트 추출
+      4. 개선 가능한 부분이나 문제점 식별
+      5. 한국어로 응답
+      
+      설정:
+      - 모델: ${model}
+      - 온도: ${temperature}
+    depends_on: "file-read"
+
+  - id: "content-transformation"
+    name: "내용 변환"
+    type: "claude"
+    prompt: |
+      이전 분석 결과를 바탕으로, 파일 내용을 ${output_format} 형식으로 변환해주세요.
+      
+      원본 내용:
+      ${file_read.content}
+      
+      분석 결과:
+      ${content_analysis.content}
+      
+      변환 요구사항:
+      1. ${output_format} 형식으로 변환
+      2. 원본 내용의 의미와 구조 유지
+      3. 가독성과 이해도 향상
+      4. 필요시 주석이나 설명 추가
+      5. 한국어 설명 포함
+      
+      설정:
+      - 모델: ${model}
+      - 온도: ${temperature}
+    depends_on: "content-analysis"
+
+  - id: "quality-check"
+    name: "품질 검사"
+    type: "claude"
+    prompt: |
+      변환된 결과의 품질을 검사하고 개선 제안을 해주세요.
+      
+      변환 결과:
+      ${content_transformation.content}
+      
+      검사 항목:
+      1. 형식 정확성 (${output_format} 문법 준수)
+      2. 내용 완성도 (원본 정보 누락 여부)
+      3. 가독성 (구조, 명확성, 일관성)
+      4. 오류나 문제점 식별
+      5. 개선 제안사항
+      
+      설정:
+      - 모델: ${model}
+      - 온도: ${temperature}
+    depends_on: "content-transformation"
+
+  - id: "final-output"
+    name: "최종 출력"
+    type: "output"
+    format: "${output_format}"
+    description: "변환된 내용을 지정된 형식으로 출력"
+    content: "${content_transformation.content}"
+    metadata:
+      original_file: "${input_file}"
+      transformation_date: "${CURRENT_DATE}"
+      quality_score: "${quality_check.score}"
+      improvement_suggestions: "${quality_check.suggestions}"
+    depends_on: "quality-check"
