@@ -48,22 +48,22 @@ describe('RunCommand', () => {
       }
     });
 
-    it('debug 옵션이 있을 때 디버그 로그를 출력해야 함', async () => {
+    it('verbose 옵션이 있을 때 상세한 로그를 출력해야 함', async () => {
       const { outputs, restore } = cliTestHelpers.captureConsoleOutput();
       
       try {
-        await command.run(['workflow.yaml'], { debug: true });
+        await command.run(['workflow.yaml'], { verbose: true });
         expect(outputs.some(o => o.type === 'log')).toBe(true);
       } finally {
         restore();
       }
     });
 
-    it('output 옵션이 있을 때 출력 디렉토리를 설정해야 함', async () => {
+    it('timeout 옵션이 있을 때 적절한 시간 제한을 설정해야 함', async () => {
       const { outputs, restore } = cliTestHelpers.captureConsoleOutput();
       
       try {
-        await command.run(['workflow.yaml'], { output: './output' });
+        await command.run(['workflow.yaml'], { timeout: 30000 });
         expect(outputs.some(o => o.type === 'log')).toBe(true);
       } finally {
         restore();

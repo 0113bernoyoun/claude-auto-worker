@@ -1,4 +1,4 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import chalk from 'chalk';
 import {
     CLIError,
@@ -21,7 +21,7 @@ export interface ErrorDisplayOptions {
 
 @Injectable()
 export class ErrorHandlerService {
-  constructor(@Inject('Logger') private readonly logger: any) {}
+  constructor(private readonly logger: Logger) {}
 
   /**
    * 에러를 처리하고 사용자 친화적인 메시지를 출력

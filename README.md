@@ -128,9 +128,7 @@ cp .env.example .env
 npm run start:dev
 ```
 
-### CLI 사용법
-
-#### 🚀 기본 명령어
+### 기본 사용법
 
 ```bash
 # 워크플로우 실행
@@ -139,44 +137,19 @@ claude-auto-worker run workflow.yaml
 # 상태 확인
 claude-auto-worker status
 
-# 로그 보기
-claude-auto-worker logs
-
-# 설정 관리
-claude-auto-worker config show
-
-# 도움말
-claude-auto-worker help
-```
-
-#### 💡 사용 예제
-
-```bash
-# 디버그 모드로 워크플로우 실행
-claude-auto-worker run workflow.yaml --debug
-
-# 특정 워크플로우 상태 확인
-claude-auto-worker status -w workflow-123
-
-# 실시간 로그 추적
-claude-auto-worker logs -f
-
-# 설정 파일 초기화
-claude-auto-worker config init
-```
-
-#### 📖 상세 가이드
-
-CLI 사용에 대한 자세한 가이드는 [CLI 사용 가이드](docs/user-guide/cli-usage-guide.md)를 참조하세요.
-
-### 🌐 웹 대시보드
-
-```bash
 # 개발 서버 실행 (포트 5849)
 npm run start:dev
 
 # API 서버 접속
 curl http://localhost:5849/api/health
+```
+claude-auto-worker status
+
+# 로그 보기
+claude-auto-worker logs --tail
+
+# 새 워크플로우 생성
+claude-auto-worker create refactor
 ```
 
 ## 진행상황

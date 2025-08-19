@@ -19,11 +19,6 @@ import { ErrorHandlerService } from './services/error-handler.service';
     ConfigCommand,
     ProjectConfigService,
     ErrorHandlerService,
-    // Logger를 명시적으로 제공
-    {
-      provide: 'Logger',
-      useValue: console,
-    },
   ],
   exports: [
     RunCommand,
