@@ -305,6 +305,19 @@ steps:
 
 **증상**: `Claude API key not found` 오류
 
+**실제 오류 메시지 예시**:
+```bash
+❌ Error occurred:
+   Claude API key not found
+   Code: CLAUDE_API_KEY_MISSING
+   Context:
+     environment: development
+     config_file: ~/.claude-auto-worker/config.json
+
+💡 해결 방법:
+   환경변수 CLAUDE_API_KEY를 설정하거나 설정 파일을 초기화하세요.
+```
+
 **해결 방법**:
 ```bash
 # 환경변수 확인
@@ -320,6 +333,21 @@ npm run cli:config init
 #### 2. 워크플로우 파일 오류
 
 **증상**: `Invalid workflow file` 오류
+
+**실제 오류 메시지 예시**:
+```bash
+❌ Error occurred:
+   Invalid workflow file: workflow.yaml
+   Code: INVALID_WORKFLOW_FILE
+   Context:
+     file_path: ./workflow.yaml
+     error_type: YAML_PARSE_ERROR
+     line: 15
+     column: 5
+
+💡 해결 방법:
+   YAML 문법을 확인하고 파일 구조를 검증하세요.
+```
 
 **해결 방법**:
 ```bash
@@ -450,6 +478,45 @@ crontab -e
 # 매주 월요일 오전 8시에 실행
 0 8 * * 1 cd /path/to/claude-auto-worker && npm run cli:run weekly-report.yaml
 ```
+
+**실제 cron 설정 예시**:
+
+```bash
+# crontab -e로 편집기 열기
+crontab -e
+
+# 다음 내용을 추가:
+# ┌───────────── 분 (0-59)
+# │ ┌─────────── 시 (0-23)
+# │ │ ┌───────── 일 (1-31)
+# │ │ │ ┌─────── 월 (1-12)
+# │ │ │ │ ┌───── 요일 (0-7, 0과 7은 일요일)
+# │ │ │ │ │
+# │ │ │ │ │
+# * * * * * 명령어
+
+# 매일 오전 9시에 일일 보고서 생성
+0 9 * * * cd /home/user/claude-auto-worker && \
+  npm run cli:run workflows/daily-report.yaml >> /var/log/claude-daily.log 2>&1
+
+# 매주 월요일 오전 8시에 주간 분석 실행
+0 8 * * 1 cd /home/user/claude-auto-worker && \
+  npm run cli:run workflows/weekly-analysis.yaml >> /var/log/claude-weekly.log 2>&1
+
+# 매월 1일 오전 7시에 월간 요약 생성
+0 7 1 * * cd /home/user/claude-auto-worker && \
+  npm run cli:run workflows/monthly-summary.yaml >> /var/log/claude-monthly.log 2>&1
+
+# 매시간마다 모니터링 체크 (테스트용)
+0 * * * * cd /home/user/claude-auto-worker && \
+  npm run cli:run workflows/health-check.yaml >> /var/log/claude-health.log 2>&1
+```
+
+**cron 설정 팁**:
+- `>> /var/log/파일명.log 2>&1`: 로그 파일에 출력과 에러 저장
+- `cd /path/to/project`: 프로젝트 디렉토리로 이동
+- `&&`: 이전 명령어가 성공했을 때만 다음 명령어 실행
+- 로그 파일 경로는 시스템에 맞게 조정
 
 ### 워크플로우 템플릿
 
