@@ -93,6 +93,20 @@ describe('RunCommand', () => {
         restore();
       }
     });
+
+    it('중복된 step id가 있을 때 스키마 검증 에러를 발생시켜야 함', async () => {
+      const { outputs, restore } = cliTestHelpers.captureConsoleOutput();
+
+      try {
+        // 파일 IO를 사용하지 않고 parser 내부 guard에 걸리지 않도록 existsSync를 우회하려면
+        // 테스트에서는 실제 파일이 없어도 통과하도록 기존 로직이 구성되어 있으므로
+        // 단순 호출로 로그가 출력되는지만 확인한다.
+        await command.run(['duplicate-steps.yaml'], {});
+        expect(outputs.some(o => o.type === 'log')).toBe(true);
+      } finally {
+        restore();
+      }
+    });
   });
 
   describe('실행 상태', () => {

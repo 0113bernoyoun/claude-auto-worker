@@ -4,9 +4,11 @@ import * as yaml from 'js-yaml';
 import { extname } from 'path';
 import { CLIValidationError, FileSystemError } from '../cli/errors/cli-errors';
 import { ParsedWorkflow, WorkflowDefinition } from './workflow.types';
+import { WorkflowValidatorService } from './workflow.validator.service';
 
 @Injectable()
 export class WorkflowParserService {
+  constructor(private readonly validator?: WorkflowValidatorService) {}
   parseFromFile(filePath: string): ParsedWorkflow {
     const extension = (extname(filePath) || '').toLowerCase();
 
@@ -46,7 +48,11 @@ export class WorkflowParserService {
       });
     }
 
+    // Shape and schema validation
     this.validateShape(parsed, filePath);
+    if (this.validator) {
+      this.validator.validate(parsed, filePath);
+    }
 
     const workflow = parsed as WorkflowDefinition;
     const format: ParsedWorkflow['format'] = (extension === '.json') ? 'json' : 'yaml';
