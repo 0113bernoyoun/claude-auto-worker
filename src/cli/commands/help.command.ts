@@ -91,7 +91,7 @@ export class HelpCommand extends CommandRunner {
         break;
 
       default:
-        console.log('❌ Unknown command: ${command}');
+        console.log(`❌ Unknown command: ${command}`);
         console.log('💡 Use "claude-auto-worker help" to see available commands');
     }
   }
