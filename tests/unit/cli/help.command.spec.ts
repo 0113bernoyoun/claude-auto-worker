@@ -66,7 +66,7 @@ describe('HelpCommand', () => {
       
       try {
         await command.run([]);
-        const helpOutput = outputs.find(o => o.type === 'log')?.message || '';
+        const helpOutput = outputs.map(o => o.message).join('\n');
         expect(helpOutput).toContain('config');
         expect(helpOutput).toContain('help');
       } finally {

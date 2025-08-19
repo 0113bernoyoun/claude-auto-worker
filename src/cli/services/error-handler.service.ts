@@ -1,5 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
-import chalk from 'chalk';
+import { Injectable } from '@nestjs/common';
 import {
     CLIError,
     CLIValidationError,
@@ -21,7 +20,7 @@ export interface ErrorDisplayOptions {
 
 @Injectable()
 export class ErrorHandlerService {
-  constructor(private readonly logger: Logger) {}
+  constructor() {}
 
   /**
    * 에러를 처리하고 사용자 친화적인 메시지를 출력
@@ -57,9 +56,11 @@ export class ErrorHandlerService {
    */
   private logError(error: Error | CLIError): void {
     if (this.isCLIError(error)) {
-      this.logger.error(`CLI Error [${error.code}]: ${error.message}`, error.stack, 'CLI');
+      console.error(`CLI Error [${(error as CLIError).code}]: ${error.message}`);
+      if (error.stack) console.error(error.stack);
     } else {
-      this.logger.error(`Generic Error: ${error.message}`, error.stack, 'CLI');
+      console.error(`Generic Error: ${error.message}`);
+      if (error.stack) console.error(error.stack);
     }
   }
 
@@ -67,28 +68,28 @@ export class ErrorHandlerService {
    * CLI 에러를 사용자 친화적으로 출력
    */
   private displayCLIError(error: CLIError, options: Required<ErrorDisplayOptions>): void {
-    console.error('\n' + chalk.red('❌ Error occurred:'));
+    console.error('\n' + '❌ Error occurred:');
 
     // 에러 메시지
-    console.error(chalk.white(`   ${error.message}`));
+    console.error(`   ${error.message}`);
 
     // 에러 코드
     if (options.showErrorCode) {
-      console.error(chalk.gray(`   Code: ${error.code}`));
+      console.error(`   Code: ${error.code}`);
     }
 
     // 컨텍스트 정보
     if (options.showContext && error.context) {
-      console.error(chalk.yellow('   Context:'));
+      console.error('   Context:');
       Object.entries(error.context).forEach(([key, value]) => {
-        console.error(chalk.gray(`     ${key}: ${value}`));
+        console.error(`     ${key}: ${value}`);
       });
     }
 
     // 스택 트레이스
     if (options.showStackTrace && error.stack) {
-      console.error(chalk.gray('   Stack trace:'));
-      console.error(chalk.gray(error.stack));
+      console.error('   Stack trace:');
+      console.error(error.stack);
     }
   }
 
@@ -96,12 +97,12 @@ export class ErrorHandlerService {
    * 일반 에러를 사용자 친화적으로 출력
    */
   private displayGenericError(error: Error, options: Required<ErrorDisplayOptions>): void {
-    console.error('\n' + chalk.red('❌ Unexpected error occurred:'));
-    console.error(chalk.white(`   ${error.message}`));
+    console.error('\n' + '❌ Unexpected error occurred:');
+    console.error(`   ${error.message}`);
 
     if (options.showStackTrace && error.stack) {
-      console.error(chalk.gray('   Stack trace:'));
-      console.error(chalk.gray(error.stack));
+      console.error('   Stack trace:');
+      console.error(error.stack);
     }
   }
 
@@ -109,42 +110,42 @@ export class ErrorHandlerService {
    * 에러 복구 방법 제안
    */
   private suggestRecovery(error: Error | CLIError): void {
-    console.error(chalk.blue('\n💡 Suggestions:'));
+    console.error('\n💡 Suggestions:');
 
     if (this.isCLIError(error)) {
       switch (error.code) {
         case ERROR_CODES.CLI_VALIDATION:
-          console.error(chalk.cyan('   • Check command syntax and options'));
-          console.error(chalk.cyan('   • Use --help for command usage'));
+          console.error('   • Check command syntax and options');
+          console.error('   • Use --help for command usage');
           break;
         case ERROR_CODES.FILE_SYSTEM:
-          console.error(chalk.cyan('   • Verify file paths and permissions'));
-          console.error(chalk.cyan('   • Check disk space and file existence'));
+          console.error('   • Verify file paths and permissions');
+          console.error('   • Check disk space and file existence');
           break;
         case ERROR_CODES.WORKFLOW:
-          console.error(chalk.cyan('   • Validate workflow configuration'));
-          console.error(chalk.cyan('   • Check required dependencies'));
+          console.error('   • Validate workflow configuration');
+          console.error('   • Check required dependencies');
           break;
         case ERROR_CODES.CONFIGURATION:
-          console.error(chalk.cyan('   • Verify configuration file format'));
-          console.error(chalk.cyan('   • Check environment variables'));
+          console.error('   • Verify configuration file format');
+          console.error('   • Check environment variables');
           break;
         case ERROR_CODES.NETWORK:
-          console.error(chalk.cyan('   • Check internet connection'));
-          console.error(chalk.cyan('   • Verify API endpoints and keys'));
+          console.error('   • Check internet connection');
+          console.error('   • Verify API endpoints and keys');
           break;
         case ERROR_CODES.PERMISSION:
-          console.error(chalk.cyan('   • Check file/directory permissions'));
-          console.error(chalk.cyan('   • Run with appropriate privileges'));
+          console.error('   • Check file/directory permissions');
+          console.error('   • Run with appropriate privileges');
           break;
         default:
-          console.error(chalk.cyan('   • Review error details above'));
-          console.error(chalk.cyan('   • Check logs for more information'));
+          console.error('   • Review error details above');
+          console.error('   • Check logs for more information');
       }
     } else {
-      console.error(chalk.cyan('   • Review error details above'));
-      console.error(chalk.cyan('   • Check logs for more information'));
-      console.error(chalk.cyan('   • Try running with --debug flag'));
+      console.error('   • Review error details above');
+      console.error('   • Check logs for more information');
+      console.error('   • Try running with --debug flag');
     }
   }
 

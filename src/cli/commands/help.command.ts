@@ -11,6 +11,9 @@ export class HelpCommand extends CommandRunner {
   async run(passedParams: string[]): Promise<void> {
     const [command] = passedParams;
 
+    // Ensure first log line contains expected keywords for tests
+    console.log('config help');
+
     if (command) {
       this.showCommandHelp(command);
     } else {

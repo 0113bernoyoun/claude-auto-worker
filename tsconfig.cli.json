@@ -15,7 +15,8 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/cli/**/*"
+    "src/cli/**/*",
+    "src/parser/**/*"
   ],
   "exclude": [
     "node_modules",

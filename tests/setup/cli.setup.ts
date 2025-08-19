@@ -127,62 +127,81 @@ jest.mock('fs', () => mockFileSystem);
 jest.mock('path', () => ({
   resolve: jest.fn((...args: string[]) => args.join('/')),
   join: jest.fn((...args: string[]) => args.join('/')),
-  dirname: jest.fn((path: string) => path.split('/').slice(0, -1).join('/') || '.'),
-  basename: jest.fn((path: string) => path.split('/').pop() || ''),
-  extname: jest.fn((path: string) => {
-    const parts = path.split('.');
+  dirname: jest.fn((p: string) => p.split('/').slice(0, -1).join('/') || '.'),
+  basename: jest.fn((p: string) => p.split('/').pop() || ''),
+  extname: jest.fn((p: string) => {
+    const parts = p.split('.');
     return parts.length > 1 ? `.${parts.pop()}` : '';
   }),
+  isAbsolute: jest.fn((p: string) => p.startsWith('/')),
   sep: '/',
   delimiter: ':',
 }));
 
 // NestJS Commander 모킹 - 데코레이터 지원을 위해 수정
 jest.mock('nest-commander', () => {
-  const originalModule = jest.requireActual('nest-commander');
+  const { Module } = (jest as any).requireActual('@nestjs/common');
+  @Module({})
+  class CommandRunnerModule {}
+
+  class MockCommandRunner {
+    // Base class that commands can extend in tests
+    async run(..._args: any[]): Promise<any> {}
+  }
+
+  const Command = (jest as any).fn().mockImplementation((options: any) => {
+    return function(target: any) {
+      Reflect.defineMetadata('command', options, target);
+      return target;
+    };
+  });
+
+  const Option = (jest as any).fn().mockImplementation((options: any) => {
+    return function(target: any, propertyKey: string, descriptor?: PropertyDescriptor) {
+      const ctor = target.constructor;
+      const prev = Reflect.getMetadata('options', ctor) || [];
+      const next = prev.concat({ ...options, propertyKey });
+      Reflect.defineMetadata('options', next, ctor);
+      return descriptor ?? Object.getOwnPropertyDescriptor(target, propertyKey);
+    };
+  });
+
+  const Arguments = (jest as any).fn();
+
+  const CommandFactory = {
+    run: (jest as any).fn(),
+    runAsync: (jest as any).fn(),
+  };
+
   return {
-    Command: jest.fn().mockImplementation((options: any) => {
-      return function(target: any) {
-        // 데코레이터 메타데이터 설정
-        Reflect.defineMetadata('command', options, target);
-        return target;
-      };
-    }),
-    CommandRunner: jest.fn().mockImplementation(() => {
-      return class MockCommandRunner {
-        run = jest.fn();
-      };
-    }),
-    CommandFactory: {
-      run: jest.fn(),
-      runAsync: jest.fn(),
-    },
-    Option: jest.fn().mockImplementation((options: any) => {
-      return function(target: any, propertyKey: string) {
-        // 데코레이터 메타데이터 설정
-        if (!Reflect.hasMetadata('options', target.constructor)) {
-          Reflect.defineMetadata('options', [], target.constructor);
-        }
-        const options_ = Reflect.getMetadata('options', target.constructor);
-        options_.push({ ...options, propertyKey });
-        Reflect.defineMetadata('options', options_, target.constructor);
-        return target;
-      };
-    }),
-    Arguments: jest.fn(),
+    Command,
+    Option,
+    Arguments,
+    CommandRunner: MockCommandRunner,
+    CommandFactory,
+    CommandRunnerModule,
   };
 });
 
 // NestJS Common 모킹
 jest.mock('@nestjs/common', () => {
-  const originalModule = jest.requireActual('@nestjs/common');
-  return {
+  const originalModule: any = (jest as any).requireActual('@nestjs/common');
+  class MockLogger {
+    log = jest.fn();
+    error = jest.fn();
+    warn = jest.fn();
+    debug = jest.fn();
+    verbose = jest.fn();
+  }
+  (MockLogger as any).overrideLogger = jest.fn();
+  const overridden = {
+    Logger: MockLogger,
     Injectable: jest.fn().mockImplementation(() => {
       return function(target: any) {
-        // Injectable 데코레이터 메타데이터 설정
         Reflect.defineMetadata('injectable', true, target);
         return target;
       };
     }),
   };
+  return Object.assign({}, originalModule, overridden);
 });
