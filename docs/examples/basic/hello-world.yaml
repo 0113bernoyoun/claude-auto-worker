@@ -1,0 +1,15 @@
+name: "Hello World 워크플로우"
+description: "Claude Auto Worker 첫 번째 예제"
+
+stages:
+  - name: "인사하기"
+    prompt: "안녕하세요! 간단한 인사말을 한국어로 해주세요."
+    run: "echo 'Claude가 인사말을 생성했습니다.'"
+    
+  - name: "환영 메시지"
+    prompt: "Claude Auto Worker에 오신 것을 환영하는 메시지를 작성해주세요."
+    run: "echo '환영 메시지가 생성되었습니다.'"
+    
+  - name: "완료 알림"
+    prompt: "워크플로우가 성공적으로 완료되었음을 알리는 메시지를 작성해주세요."
+    run: "echo '워크플로우 실행이 완료되었습니다!'"

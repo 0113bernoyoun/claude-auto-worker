@@ -137,52 +137,22 @@ jest.mock('path', () => ({
   delimiter: ':',
 }));
 
-// NestJS Commander 모킹 - 데코레이터 지원을 위해 수정
-jest.mock('nest-commander', () => {
-  const originalModule = jest.requireActual('nest-commander');
-  return {
-    Command: jest.fn().mockImplementation((options: any) => {
-      return function(target: any) {
-        // 데코레이터 메타데이터 설정
-        Reflect.defineMetadata('command', options, target);
-        return target;
-      };
-    }),
-    CommandRunner: jest.fn().mockImplementation(() => {
-      return class MockCommandRunner {
-        run = jest.fn();
-      };
-    }),
-    CommandFactory: {
-      run: jest.fn(),
-      runAsync: jest.fn(),
-    },
-    Option: jest.fn().mockImplementation((options: any) => {
-      return function(target: any, propertyKey: string) {
-        // 데코레이터 메타데이터 설정
-        if (!Reflect.hasMetadata('options', target.constructor)) {
-          Reflect.defineMetadata('options', [], target.constructor);
-        }
-        const options_ = Reflect.getMetadata('options', target.constructor);
-        options_.push({ ...options, propertyKey });
-        Reflect.defineMetadata('options', options_, target.constructor);
-        return target;
-      };
-    }),
-    Arguments: jest.fn(),
-  };
-});
-
 // NestJS Common 모킹
-jest.mock('@nestjs/common', () => {
-  const originalModule = jest.requireActual('@nestjs/common');
-  return {
-    Injectable: jest.fn().mockImplementation(() => {
-      return function(target: any) {
-        // Injectable 데코레이터 메타데이터 설정
-        Reflect.defineMetadata('injectable', true, target);
-        return target;
-      };
-    }),
-  };
-});
+jest.mock('@nestjs/common', () => ({
+  Injectable: jest.fn().mockImplementation(() => {
+    return function(target: any) {
+      // Injectable 데코레이터 메타데이터 설정
+      Reflect.defineMetadata('injectable', true, target);
+      return target;
+    };
+  }),
+  Logger: jest.fn().mockImplementation(() => ({
+    log: jest.fn(),
+    error: jest.fn(),
+    warn: jest.fn(),
+    debug: jest.fn(),
+    verbose: jest.fn(),
+    setContext: jest.fn(),
+  })),
+  Inject: jest.fn(),
+}));
