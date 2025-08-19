@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import Ajv, { ErrorObject } from 'ajv';
+import Ajv, { ErrorObject, ValidateFunction } from 'ajv';
 import addFormats from 'ajv-formats';
 import { workflowSchema } from './workflow.schema';
 import { CLIValidationError } from '../cli/errors/cli-errors';
@@ -7,6 +7,7 @@ import { CLIValidationError } from '../cli/errors/cli-errors';
 @Injectable()
 export class WorkflowValidatorService {
   private readonly ajv: Ajv;
+  private readonly compiled: ValidateFunction;
 
   constructor() {
     this.ajv = new Ajv({
@@ -51,16 +52,18 @@ export class WorkflowValidatorService {
 
     // Attach keyword to schema at runtime
     (workflowSchema as any).properties.steps.uniqueStepIds = true;
+
+    // Compile once and cache the validator function
+    this.compiled = this.ajv.compile(workflowSchema);
   }
 
   validate(value: unknown, filePath?: string): void {
-    const validate = this.ajv.compile(workflowSchema);
-    const valid = validate(value);
+    const valid = this.compiled(value);
     if (!valid) {
-      const details = (validate.errors || []).map(e => this.formatAjvError(e)).join('\n');
+      const details = (this.compiled.errors || []).map(e => this.formatAjvError(e)).join('\n');
       throw new CLIValidationError('Workflow schema validation failed', {
         file: filePath,
-        errors: validate.errors,
+        errors: this.compiled.errors,
         message: details,
       });
     }
