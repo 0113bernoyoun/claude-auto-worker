@@ -15,12 +15,12 @@
     "skipLibCheck": true
   },
   "include": [
-    "src/cli/**/*",
-    "tests/unit/cli/**/*"
+    "src/cli/**/*"
   ],
   "exclude": [
     "node_modules",
     "dist",
-    "test"
+    "test",
+    "tests"
   ]
 }
