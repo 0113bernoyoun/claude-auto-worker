@@ -13,10 +13,27 @@ import { ErrorHandlerService } from '../services/error-handler.service';
 })
 export class RunCommand extends CommandRunner {
   constructor(
-    @Optional() private readonly errorHandler: ErrorHandlerService = new ErrorHandlerService(),
-    @Optional() private readonly parser: WorkflowParserService = new WorkflowParserService(),
+    @Optional() private readonly injectedErrorHandler?: ErrorHandlerService,
+    @Optional() private readonly injectedParser?: WorkflowParserService,
   ) {
     super();
+  }
+
+  private get errorHandler(): ErrorHandlerService {
+    if (this.injectedErrorHandler) return this.injectedErrorHandler;
+    // In tests, allow fallback instance to avoid DI boilerplate
+    if (process.env.NODE_ENV === 'test') {
+      return new ErrorHandlerService();
+    }
+    throw new Error('ErrorHandlerService not provided. Ensure proper module DI in production.');
+  }
+
+  private get parser(): WorkflowParserService {
+    if (this.injectedParser) return this.injectedParser;
+    if (process.env.NODE_ENV === 'test') {
+      return new WorkflowParserService();
+    }
+    throw new Error('WorkflowParserService not provided. Ensure proper module DI in production.');
   }
 
   @Option({
