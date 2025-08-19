@@ -36,6 +36,8 @@
     "@nestjs/event-emitter": "^2.0.0",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "chalk": "^5.6.0",
     "chart.js": "^4.4.0",
     "class-transformer": "^0.5.1",
