@@ -29,6 +29,7 @@
   - ✅ PR #9 머지: `DEVELOPMENT_TASKS.md`에 "프로토타입 Fast-Track" 섹션 추가 (데모 최단 경로 정리)
   - ✅ PR #10 머지: 파서 통합 및 CLI 테스트 안정화
   - ✅ PR #13 머지: Workflow Executor MVP (TASK-020) 완료
+  - ✅ PR #21 머지: Executor – Claude CLI 액션 매핑/실행 및 로깅 (TASK-081)
 
 ### 핵심 가치 제안
 1. **안전한 자동화**: Git 브랜치 격리, 테스트 자동화, 정책 기반 필터링
