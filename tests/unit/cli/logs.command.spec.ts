@@ -1,13 +1,14 @@
 import { Test } from '@nestjs/testing';
 import { LogsCommand } from '../../../src/cli/commands/logs.command';
 import { cliTestHelpers } from '../../setup/cli.setup';
+import { FileLoggerService } from '../../../src/core/file-logger.service';
 
 describe('LogsCommand', () => {
   let command: LogsCommand;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [LogsCommand],
+      providers: [LogsCommand, FileLoggerService],
     }).compile();
     command = moduleRef.get(LogsCommand);
   });
