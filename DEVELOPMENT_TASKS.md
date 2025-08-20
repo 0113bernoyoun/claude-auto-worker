@@ -615,25 +615,25 @@
 
 ### 🔴 높은 우선순위 (24개)
 **즉시 실행 필요, 프로젝트 성공에 핵심적인 태스크**
-- 프로젝트 기반 구조 (TASK-001 ~ TASK-003)
-- CLI 모듈 핵심 (TASK-008 ~ TASK-010)
-- DSL 파서 핵심 (TASK-014 ~ TASK-016)
-- 워크플로우 엔진 (TASK-020 ~ TASK-022)
-- 웹 대시보드 핵심 (TASK-026 ~ TASK-028)
-- 정책 엔진 핵심 (TASK-032 ~ TASK-034)
-- 플러그인 아키텍처 (TASK-038 ~ TASK-040)
-- 최종 통합 (TASK-044 ~ TASK-046)
+- 프로젝트 기반 구조 (TASK-001, TASK-002, TASK-003)
+- CLI 모듈 핵심 (TASK-008, TASK-009, TASK-010)
+- DSL 파서 핵심 (TASK-014, TASK-015, TASK-016)
+- 워크플로우 엔진 (TASK-020, TASK-021, TASK-022)
+- 웹 대시보드 핵심 (TASK-026, TASK-027, TASK-028)
+- 정책 엔진 핵심 (TASK-032, TASK-033, TASK-034)
+- 플러그인 아키텍처 (TASK-038, TASK-039, TASK-040)
+- 최종 통합 (TASK-044, TASK-045, TASK-046)
 
 ### 🟡 보통 우선순위 (32개)
 **중요하지만 일정 조정 가능한 태스크**
-- 개발 환경 및 DevOps (TASK-004 ~ TASK-007)
-- CLI 고도화 (TASK-011 ~ TASK-013)
-- 워크플로우 고도화 (TASK-017 ~ TASK-019)
-- 엔진 고도화 (TASK-023 ~ TASK-025)
-- 대시보드 고도화 (TASK-029 ~ TASK-031)
-- 보안 고도화 (TASK-035 ~ TASK-037)
-- 플러그인 고도화 (TASK-041 ~ TASK-043)
-- 배포 및 문서화 (TASK-047 ~ TASK-049)
+- 개발 환경 및 DevOps (TASK-004, TASK-005, TASK-006, TASK-007)
+- CLI 고도화 (TASK-011, TASK-012, TASK-013)
+- 워크플로우 고도화 (TASK-017, TASK-018, TASK-019)
+- 엔진 고도화 (TASK-023, TASK-024, TASK-025)
+- 대시보드 고도화 (TASK-029, TASK-030, TASK-031)
+- 보안 고도화 (TASK-035, TASK-036, TASK-037)
+- 플러그인 고도화 (TASK-041, TASK-042, TASK-043)
+- 배포 및 문서화 (TASK-047, TASK-048, TASK-049)
 
 ### 🟢 낮은 우선순위 (16개)
 **향후 개선 및 추가 기능 태스크**
@@ -891,29 +891,29 @@
 
 ### 🔴 높은 우선순위 (32개)
 **즉시 실행 필요, 프로젝트 성공에 핵심적인 태스크**
-- 프로젝트 기반 구조 (TASK-001 ~ TASK-003)
-- CLI 모듈 핵심 (TASK-008 ~ TASK-010)
-- DSL 파서 핵심 (TASK-014 ~ TASK-016)
-- 워크플로우 엔진 (TASK-020 ~ TASK-022)
-- 웹 대시보드 핵심 (TASK-026 ~ TASK-028)
-- 정책 엔진 핵심 (TASK-032 ~ TASK-034)
-- 플러그인 아키텍처 (TASK-038 ~ TASK-040)
-- 최종 통합 (TASK-044 ~ TASK-046)
-- VS Code Extension 핵심 (TASK-050 ~ TASK-055)
-- 실시간 이벤트 파이프라인 (TASK-060 ~ TASK-063)
+- 프로젝트 기반 구조 (TASK-001, TASK-002, TASK-003)
+- CLI 모듈 핵심 (TASK-008, TASK-009, TASK-010)
+- DSL 파서 핵심 (TASK-014, TASK-015, TASK-016)
+- 워크플로우 엔진 (TASK-020, TASK-021, TASK-022)
+- 웹 대시보드 핵심 (TASK-026, TASK-027, TASK-028)
+- 정책 엔진 핵심 (TASK-032, TASK-033, TASK-034)
+- 플러그인 아키텍처 (TASK-038, TASK-039, TASK-040)
+- 최종 통합 (TASK-044, TASK-045, TASK-046)
+- VS Code Extension 핵심 (TASK-050, TASK-051, TASK-052, TASK-053, TASK-054, TASK-055)
+- 실시간 이벤트 파이프라인 (TASK-060, TASK-061, TASK-062, TASK-063)
 
 ### 🟡 보통 우선순위 (37개)
 **중요하지만 일정 조정 가능한 태스크**
-- 개발 환경 및 DevOps (TASK-004 ~ TASK-007)
-- CLI 고도화 (TASK-011 ~ TASK-013)
-- 워크플로우 고도화 (TASK-017 ~ TASK-019)
-- 엔진 고도화 (TASK-023 ~ TASK-025)
-- 대시보드 고도화 (TASK-029 ~ TASK-031)
-- 보안 고도화 (TASK-035 ~ TASK-037)
-- 플러그인 고도화 (TASK-041 ~ TASK-043)
-- 배포 및 문서화 (TASK-047 ~ TASK-049)
+- 개발 환경 및 DevOps (TASK-004, TASK-005, TASK-006, TASK-007)
+- CLI 고도화 (TASK-011, TASK-012, TASK-013)
+- 워크플로우 고도화 (TASK-017, TASK-018, TASK-019)
+- 엔진 고도화 (TASK-023, TASK-024, TASK-025)
+- 대시보드 고도화 (TASK-029, TASK-030, TASK-031)
+- 보안 고도화 (TASK-035, TASK-036, TASK-037)
+- 플러그인 고도화 (TASK-041, TASK-042, TASK-043)
+- 배포 및 문서화 (TASK-047, TASK-048, TASK-049)
 - VS Code Extension 고도화 (TASK-053, TASK-059)
-- 대시보드 모니터링 고도화 (TASK-064 ~ TASK-065)
+- 대시보드 모니터링 고도화 (TASK-064, TASK-065)
 - 스트리밍 폴백/제어 (TASK-061)
 
 ### 🟢 낮은 우선순위 (19개)
@@ -923,7 +923,7 @@
 - 고급 보안 기능
 - 고급 플러그인 기능
 - 고급 모니터링 기능
-- VS Code 설정/배포 (TASK-056 ~ TASK-058)
+- VS Code 설정/배포 (TASK-056, TASK-057, TASK-058)
 
 ---
 
