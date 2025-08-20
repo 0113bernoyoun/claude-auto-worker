@@ -70,6 +70,7 @@ export const mockFileSystem = {
   writeFileSync: jest.fn(),
   mkdirSync: jest.fn(),
   statSync: jest.fn(),
+  readdirSync: jest.fn(() => []),
 };
 
 // CLI 테스트 헬퍼 함수들

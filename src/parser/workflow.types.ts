@@ -2,9 +2,12 @@ export type WorkflowStep = {
   id: string;
   name?: string;
   type: string;
+  action?: 'task' | 'query' | 'continue' | 'resume' | 'commit';
   depends_on?: string | string[];
   prompt?: string;
   run?: string | string[];
+  cwd?: string;
+  env?: Record<string, string>;
   branch?: string;
   policy?: WorkflowPolicy;
   [key: string]: unknown;
