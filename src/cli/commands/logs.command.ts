@@ -1,13 +1,21 @@
 import { Injectable } from '@nestjs/common';
 import { Command, CommandRunner, Option } from 'nest-commander';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as readline from 'readline';
+import { FileLoggerService, FileLogEntry } from '../../core/file-logger.service';
 
 @Injectable()
 @Command({
   name: 'logs',
-  description: 'Show Claude workflow logs',
-  arguments: '[workflow-id]',
+  description: 'Show Claude workflow logs (JSONL) filtered and optionally tailed',
+  arguments: '[run-id]'
 })
 export class LogsCommand extends CommandRunner {
+  constructor(private readonly fileLogger: FileLoggerService) {
+    super();
+  }
+
   @Option({
     flags: '-f, --follow',
     description: 'Follow log output in real-time',
@@ -40,37 +48,134 @@ export class LogsCommand extends CommandRunner {
     return val;
   }
 
+  @Option({
+    flags: '-r, --run <id>',
+    description: 'Run ID to read logs from (defaults to latest)'
+  })
+  parseRun(val: string): string {
+    return val;
+  }
+
+  private parseSinceToDate(since?: string): Date | undefined {
+    if (!since) return undefined;
+    const match = /^(\d+)([smhd])$/.exec(since.trim());
+    if (!match) return undefined;
+    const value = Number(match[1]);
+    const unit = match[2];
+    const now = Date.now();
+    const unitMs = unit === 's' ? 1000 : unit === 'm' ? 60_000 : unit === 'h' ? 3_600_000 : 86_400_000;
+    return new Date(now - value * unitMs);
+  }
+
+  private getLastLines(filePath: string, numLines: number): string[] {
+    try {
+      const content = fs.readFileSync(filePath, { encoding: 'utf-8' });
+      const lines = content.split(/\r?\n/).filter(Boolean);
+      return lines.slice(-numLines);
+    } catch {
+      return [];
+    }
+  }
+
+  private filterEntries(entries: FileLogEntry[], opts: { level?: string; since?: Date }): FileLogEntry[] {
+    let filtered = entries;
+    if (opts.level) {
+      const wanted = String(opts.level).toLowerCase();
+      filtered = filtered.filter(e => e.level === wanted);
+    }
+    if (opts.since) {
+      filtered = filtered.filter(e => new Date(e.timestamp) >= opts.since!);
+    }
+    return filtered;
+  }
+
+  private printEntries(entries: FileLogEntry[]): void {
+    for (const e of entries) {
+      const context: string[] = [];
+      if (e.workflow) context.push(`wf=${e.workflow}`);
+      if (e.stage) context.push(`stage=${e.stage}`);
+      if (e.step) context.push(`step=${e.step}`);
+      const ctxStr = context.length > 0 ? ` [${context.join(' ')}]` : '';
+      console.log(`${e.timestamp} [${e.level.toUpperCase()}]${ctxStr} ${e.message}`);
+    }
+  }
+
   async run(passedParams: string[], options?: Record<string, any>): Promise<void> {
-    const [workflowId] = passedParams;
+    const [positionalRunId] = passedParams;
+    const runId: string | undefined = options?.run || positionalRunId;
+    const sinceDate = this.parseSinceToDate(options?.since);
+    const linesNum: number = Number(options?.lines ?? 50);
 
     console.log('📝 Claude Workflow Logs');
     console.log('=======================');
 
-    if (workflowId) {
-      console.log(`Workflow ID: ${workflowId}`);
-    } else {
-      console.log('All Workflows');
+    const filePath = this.fileLogger.getLogFilePath(runId);
+    if (!filePath) {
+      console.log(runId ? `No log file found for run: ${runId}` : 'No logs found');
+      return;
     }
 
-    console.log(`Lines: ${options?.lines || '50'}`);
-    console.log(`Level: ${options?.level || 'info'}`);
-    if (options?.since) {
-      console.log(`Since: ${options.since}`);
-    }
-    if (options?.follow) {
-      console.log('Following logs in real-time...');
-    }
+    const initialLines = this.getLastLines(filePath, isNaN(linesNum) ? 50 : linesNum);
+    const initialEntries: FileLogEntry[] = initialLines.map(l => {
+      try { return JSON.parse(l); } catch { return undefined as any; }
+    }).filter(Boolean);
+    const filtered = this.filterEntries(initialEntries, { level: options?.level, since: sinceDate });
+    this.printEntries(filtered);
 
-    // TODO: Implement actual log retrieval logic
-    console.log('');
-    console.log('2024-01-15 10:30:00 [INFO] Workflow started');
-    console.log('2024-01-15 10:30:05 [INFO] Claude API connection established');
-    console.log('2024-01-15 10:30:10 [INFO] Processing stage 1/3');
-    console.log('2024-01-15 10:30:15 [INFO] Stage 1 completed successfully');
-    console.log('2024-01-15 10:30:20 [INFO] Processing stage 2/3');
+    if (!options?.follow) return;
 
-    if (options?.follow) {
-      console.log('... waiting for new logs ...');
-    }
+    console.log('--- following ---');
+    let position = fs.existsSync(filePath) ? fs.statSync(filePath).size : 0;
+
+    const onAppend = () => {
+      try {
+        const stats = fs.statSync(filePath);
+        if (stats.size < position) {
+          // file rotated; reset
+          position = 0;
+        }
+        if (stats.size > position) {
+          const stream = fs.createReadStream(filePath, { start: position, end: stats.size });
+          const rl = readline.createInterface({ input: stream, crlfDelay: Infinity });
+          rl.on('line', (line: string) => {
+            try {
+              const entry: FileLogEntry = JSON.parse(line);
+              const pass = this.filterEntries([entry], { level: options?.level, since: sinceDate });
+              if (pass.length > 0) this.printEntries(pass);
+            } catch {
+              // ignore non-JSON line
+            }
+          });
+          rl.on('close', () => { position = stats.size; });
+        }
+      } catch {
+        // ignore transient errors
+      }
+    };
+
+    const watcher = fs.watch(path.dirname(filePath), (eventType, filename) => {
+      if (!filename) return;
+      if (path.join(path.dirname(filePath), filename) === filePath && (eventType === 'change' || eventType === 'rename')) {
+        onAppend();
+      }
+    });
+
+    // also poll as fallback
+    const interval = setInterval(onAppend, 1000);
+
+    // keep process alive until SIGINT
+    await new Promise<void>((resolve) => {
+      const stop = () => {
+        clearInterval(interval);
+        try { watcher.close(); } catch {}
+        resolve();
+      };
+      // In testing environments there may be no SIGINT; auto stop after small delay
+      if (process.env.JEST_WORKER_ID) {
+        setTimeout(stop, 50);
+      } else {
+        process.on('SIGINT', stop);
+      }
+    });
   }
 }

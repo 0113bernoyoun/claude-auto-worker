@@ -34,6 +34,7 @@ export class WorkflowExecutorService {
         await this.executeStage(workflow, stageId, options);
       }
       this.state.setWorkflowStatus(WorkflowExecutionStatus.COMPLETED);
+      this.fileLogger.write('info', 'Workflow completed', { workflow: workflow.name });
     } catch (error) {
       this.state.setWorkflowStatus(WorkflowExecutionStatus.FAILED);
       this.fileLogger.write('error', 'Workflow failed', { workflow: workflow.name, meta: { error: (error as Error)?.message } });
