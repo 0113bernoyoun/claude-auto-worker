@@ -85,6 +85,7 @@ export class CommandRunnerService {
     const { action, prompt, cwd, env, timeoutMs, signal, onStdoutLine, onStderrLine } = params;
 
     const cli = 'claude';
+    // 빠른 가이드: 바이너리 미존재 시 사용자 친화 메시지
     const args: string[] = [];
 
     switch (action) {
@@ -111,7 +112,18 @@ export class CommandRunnerService {
         throw new Error(`Unsupported Claude action: ${action}`);
     }
 
-    return this.runShell(cli, args, { cwd, env, timeoutMs, signal, onStdoutLine, onStderrLine });
+    try {
+      return await this.runShell(cli, args, { cwd, env, timeoutMs, signal, onStdoutLine, onStderrLine });
+    } catch (err: any) {
+      if (err && /ENOENT/i.test(String(err.code))) {
+        throw new Error(
+          'Claude CLI not found. Please install and login first.\n' +
+          '- Install: see README (TASK-084)\n' +
+          '- Verify: `which claude` and `claude --help`'
+        );
+      }
+      throw err;
+    }
   }
 }
 

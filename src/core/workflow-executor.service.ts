@@ -1,7 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { CommandParserService } from '../parser/command.parser.service';
 import { ParsedWorkflow, WorkflowDefinition, WorkflowStage, WorkflowStep } from '../parser/workflow.types';
+import { CommandRunnerService } from './command-runner.service';
 import { ExecutionStateService } from './execution-state.service';
-import { LoggerContextService } from './logger-context.service';
 import {
     ExecutorOptions,
     StageExecutionStatus,
@@ -9,13 +10,13 @@ import {
     WorkflowExecutionStatus
 } from './execution.types';
 import { FileLoggerService } from './file-logger.service';
-import { CommandRunnerService } from './command-runner.service';
+import { LoggerContextService } from './logger-context.service';
 
 @Injectable()
 export class WorkflowExecutorService {
   private readonly logger = new Logger(WorkflowExecutorService.name);
 
-  constructor(private readonly state: ExecutionStateService, private readonly ctxLogger: LoggerContextService, private readonly fileLogger: FileLoggerService, private readonly commandRunner: CommandRunnerService) {}
+  constructor(private readonly state: ExecutionStateService, private readonly ctxLogger: LoggerContextService, private readonly fileLogger: FileLoggerService, private readonly commandRunner: CommandRunnerService, private readonly commandParser: CommandParserService) {}
 
   async execute(parsed: ParsedWorkflow, options?: ExecutorOptions): Promise<void> {
     const workflow = parsed.workflow;
@@ -106,13 +107,13 @@ export class WorkflowExecutorService {
       await this.runInPool(stepRefs, concurrency, async (stepRef) => {
         const step = workflow.steps.find(s => s.id === stepRef);
         if (!step) return;
-        await this.executeStep(stage, step, options);
+        await this.executeStep(workflow, stage, step, options);
       });
     } else {
       for (const stepRef of stepRefs) {
         const step = workflow.steps.find(s => s.id === stepRef);
         if (!step) continue;
-        await this.executeStep(stage, step, options);
+        await this.executeStep(workflow, stage, step, options);
       }
     }
 
@@ -121,12 +122,12 @@ export class WorkflowExecutorService {
     this.fileLogger.write('info', 'Stage completed', { workflow: workflow.name, stage: stageId });
   }
 
-  private async executeStep(stage: WorkflowStage, step: WorkflowStep, options?: ExecutorOptions): Promise<void> {
+  private async executeStep(workflow: WorkflowDefinition, stage: WorkflowStage, step: WorkflowStep, options?: ExecutorOptions): Promise<void> {
     const stageId = stage.id;
     const stepId = step.id;
     this.state.setStepStatus(stageId, stepId, StepExecutionStatus.RUNNING);
-    this.ctxLogger.log('Step started', { workflow: undefined, stage: stageId, step: stepId });
-    this.fileLogger.write('info', 'Step started', { stage: stageId, step: stepId });
+    this.ctxLogger.log('Step started', { workflow: workflow.name, stage: stageId, step: stepId });
+    this.fileLogger.write('info', 'Step started', { workflow: workflow.name, stage: stageId, step: stepId });
 
     const maxAttempts = step.policy?.retry?.max_attempts ?? 1;
     const baseDelay = step.policy?.retry?.delay_ms ?? 0;
@@ -139,11 +140,11 @@ export class WorkflowExecutorService {
         if (options?.dryRun) {
           await this.delay(50, options?.signal);
         } else {
-          await this.runStep(step, options);
+          await this.runStep(step, options, { workflow: workflow.name, stage: stageId, step: stepId });
         }
         this.state.setStepStatus(stageId, stepId, StepExecutionStatus.COMPLETED);
-        this.ctxLogger.log('Step completed', { workflow: undefined, stage: stageId, step: stepId });
-        this.fileLogger.write('info', 'Step completed', { stage: stageId, step: stepId });
+        this.ctxLogger.log('Step completed', { workflow: workflow.name, stage: stageId, step: stepId });
+        this.fileLogger.write('info', 'Step completed', { workflow: workflow.name, stage: stageId, step: stepId });
         return;
       } catch (error) {
         lastError = error;
@@ -151,19 +152,19 @@ export class WorkflowExecutorService {
         if (attempt >= maxAttempts) break;
         const delayMs = baseDelay * Math.pow(backoff, attempt - 1);
         this.ctxLogger.warn(`Step failed (attempt ${attempt}): ${(error as Error)?.message || error}`, { stage: stageId, step: stepId });
-        this.fileLogger.write('warn', `Step failed (attempt ${attempt})`, { stage: stageId, step: stepId, meta: { error: (error as Error)?.message } });
+        this.fileLogger.write('warn', `Step failed (attempt ${attempt})`, { workflow: workflow.name, stage: stageId, step: stepId, meta: { error: (error as Error)?.message } });
         await this.delay(delayMs, options?.signal);
       }
     }
 
     const message = lastError instanceof Error ? lastError.message : String(lastError);
     this.state.setStepStatus(stageId, stepId, StepExecutionStatus.FAILED, message);
-    this.ctxLogger.error(`Step failed: ${message}`, { stage: stageId, step: stepId });
-    this.fileLogger.write('error', `Step failed: ${message}`, { stage: stageId, step: stepId });
+    this.ctxLogger.error(`Step failed: ${message}`, { workflow: workflow.name, stage: stageId, step: stepId });
+    this.fileLogger.write('error', `Step failed: ${message}`, { workflow: workflow.name, stage: stageId, step: stepId });
     throw lastError instanceof Error ? lastError : new Error(message);
   }
 
-  private async runStep(step: WorkflowStep, options?: ExecutorOptions): Promise<void> {
+  private async runStep(step: WorkflowStep, options?: ExecutorOptions, context?: { workflow?: string; stage?: string; step?: string }): Promise<void> {
     // Claude action mapping
     if (step.type === 'claude' && step.action) {
       const timeoutSec = step.policy?.timeout?.seconds ?? 0;
@@ -175,8 +176,8 @@ export class WorkflowExecutorService {
         env: step.env,
         timeoutMs,
         signal: options?.signal,
-        onStdoutLine: (line) => this.fileLogger.write('info', line, { meta: { stream: 'stdout' } }),
-        onStderrLine: (line) => this.fileLogger.write('warn', line, { meta: { stream: 'stderr' } }),
+        onStdoutLine: (line) => this.fileLogger.write('info', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stdout' } }),
+        onStderrLine: (line) => this.fileLogger.write('warn', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stderr' } }),
       });
       if (result.code !== 0) {
         throw new Error(`Claude CLI exited with code ${result.code}`);
@@ -186,21 +187,20 @@ export class WorkflowExecutorService {
 
     // Generic run commands
     if (step.run) {
-      const commands = Array.isArray(step.run) ? step.run : [step.run];
-      for (const cmd of commands) {
-        const parts = cmd.trim().split(/\s+/).filter(Boolean);
-        const bin = parts[0];
-        const args = parts.slice(1);
-        if (!bin) {
-          throw new Error('Invalid run command: empty binary');
-        }
+      const parsed = this.commandParser.parseRunCommands(step.run);
+      for (const cmd of parsed) {
+        const bin = cmd.command;
+        const args = cmd.args ?? [];
+        const stepTimeoutSec = step.policy?.timeout?.seconds;
+        const resolvedTimeoutSec = cmd.timeout ?? stepTimeoutSec;
+        const timeoutMs = resolvedTimeoutSec !== undefined ? resolvedTimeoutSec * 1000 : options?.defaultStepTimeoutMs;
         const result = await this.commandRunner.runShell(bin, args, {
-          cwd: step.cwd,
-          env: step.env,
-          timeoutMs: step.policy?.timeout?.seconds ? step.policy.timeout.seconds * 1000 : options?.defaultStepTimeoutMs,
+          cwd: cmd.cwd ?? step.cwd,
+          env: { ...(step.env ?? {}), ...(cmd.env ?? {}) },
+          timeoutMs,
           signal: options?.signal,
-          onStdoutLine: (line) => this.fileLogger.write('info', line, { meta: { stream: 'stdout' } }),
-          onStderrLine: (line) => this.fileLogger.write('warn', line, { meta: { stream: 'stderr' } }),
+          onStdoutLine: (line) => this.fileLogger.write('info', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stdout' } }),
+          onStderrLine: (line) => this.fileLogger.write('warn', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stderr' } }),
         });
         if (result.code !== 0) {
           throw new Error(`Command failed (${bin}): exit code ${result.code}`);

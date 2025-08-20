@@ -1,7 +1,7 @@
 import { Test } from '@nestjs/testing';
-import { WorkflowExecutorService } from '../../core/workflow-executor.service';
 import { ExecutionStateService } from '../../core/execution-state.service';
 import { LoggerContextService } from '../../core/logger-context.service';
+import { WorkflowExecutorService } from '../../core/workflow-executor.service';
 import { ParsedWorkflow, WorkflowDefinition } from '../../parser/workflow.types';
 
 describe('WorkflowExecutorService (unit)', () => {
@@ -13,6 +13,10 @@ describe('WorkflowExecutorService (unit)', () => {
         ExecutionStateService,
         LoggerContextService,
         WorkflowExecutorService,
+        {
+          provide: (await import('../../parser/command.parser.service')).CommandParserService,
+          useValue: { parseRunCommands: jest.fn().mockReturnValue([]) },
+        },
         {
           provide: (await import('../../core/file-logger.service')).FileLoggerService,
           useValue: { write: jest.fn(), setRun: jest.fn(), getLogFilePath: jest.fn() },
