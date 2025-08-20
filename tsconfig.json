@@ -42,7 +42,7 @@
     "checkJs": false
   },
   "include": [
-    "src/**/*",
+    "src/**/*.ts",
     "test/**/*"
   ],
   "exclude": [
