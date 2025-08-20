@@ -9,7 +9,19 @@ describe('WorkflowExecutorService (unit)', () => {
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [ExecutionStateService, LoggerContextService, WorkflowExecutorService],
+      providers: [
+        ExecutionStateService,
+        LoggerContextService,
+        WorkflowExecutorService,
+        {
+          provide: (await import('../../core/file-logger.service')).FileLoggerService,
+          useValue: { write: jest.fn(), setRun: jest.fn(), getLogFilePath: jest.fn() },
+        },
+        {
+          provide: (await import('../../core/command-runner.service')).CommandRunnerService,
+          useValue: { runShell: jest.fn().mockResolvedValue({ code: 0 }), runClaudeWithInput: jest.fn().mockResolvedValue({ code: 0 }) },
+        },
+      ],
     }).compile();
     executor = moduleRef.get(WorkflowExecutorService);
   });
