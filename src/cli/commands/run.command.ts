@@ -102,7 +102,9 @@ export class RunCommand extends CommandRunner {
       }
 
       console.log(`🚀 Running workflow: ${workflowFile}`);
-      console.log(`Debug mode: ${options?.debug ? 'enabled' : 'disabled'}`);
+      // Align debug/verbose naming
+      const isDebug = Boolean(options?.debug || options?.verbose);
+      console.log(`Debug mode: ${isDebug ? 'enabled' : 'disabled'}`);
       console.log(`Output directory: ${options?.output || 'default'}`);
       console.log(`Dry run: ${options?.dryRun ? 'enabled' : 'disabled'}`);
 
@@ -120,9 +122,12 @@ export class RunCommand extends CommandRunner {
 
           // Execute via core executor
           await this.executor.execute(parsed, {
-            debug: options?.debug,
+            debug: isDebug,
+            verbose: options?.verbose,
             outputDir: options?.output,
             dryRun: options?.dryRun,
+            concurrency: Number(options?.concurrency) || undefined,
+            defaultStepTimeoutMs: Number(options?.timeout) || undefined,
           });
         } catch (parseError) {
           // Rethrow known CLI errors to be handled below

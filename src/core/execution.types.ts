@@ -53,9 +53,12 @@ export type WorkflowExecutionState = ExecutionTimestamps & {
 
 export type ExecutorOptions = {
   debug?: boolean;
+  verbose?: boolean;
   outputDir?: string;
   dryRun?: boolean;
   signal?: AbortSignal;
+  concurrency?: number;
+  defaultStepTimeoutMs?: number;
 };
 
 

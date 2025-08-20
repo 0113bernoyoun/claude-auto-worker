@@ -1,11 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ExecutionStateService } from './execution-state.service';
 import { WorkflowExecutorService } from './workflow-executor.service';
+import { LoggerContextService } from './logger-context.service';
 
 @Module({
   imports: [],
   controllers: [],
-  providers: [ExecutionStateService, WorkflowExecutorService],
-  exports: [ExecutionStateService, WorkflowExecutorService],
+  providers: [ExecutionStateService, WorkflowExecutorService, LoggerContextService],
+  exports: [ExecutionStateService, WorkflowExecutorService, LoggerContextService],
 })
 export class CoreModule {}
