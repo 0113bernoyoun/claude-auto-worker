@@ -3,6 +3,16 @@ import { RunCommand } from './workflow.types';
 
 @Injectable()
 export class CommandParserService {
+  // 상수 정의로 매직 넘버와 문자열 제거
+  private static readonly ENV_VAR_SEPARATOR = '=';
+  private static readonly OPTION_PREFIX = '-';
+  private static readonly CWD_OPTION = '--cwd';
+  private static readonly CWD_OPTION_SHORT = '-d';
+  private static readonly TIMEOUT_OPTION = '--timeout';
+  private static readonly TIMEOUT_OPTION_SHORT = '-t';
+  private static readonly MIN_TIMEOUT_VALUE = 1;
+  private static readonly BASE_10_RADIX = 10;
+
   /**
    * run 명령어를 파싱합니다.
    * @param runValue run 필드의 값 (문자열 또는 문자열 배열)
@@ -36,8 +46,8 @@ export class CommandParserService {
     const filteredArgs: string[] = [];
     
     for (const arg of args) {
-      if (arg.includes('=') && !arg.startsWith('-')) {
-        const [key, value] = arg.split('=', 2);
+      if (arg.includes(CommandParserService.ENV_VAR_SEPARATOR) && !arg.startsWith(CommandParserService.OPTION_PREFIX)) {
+        const [key, value] = arg.split(CommandParserService.ENV_VAR_SEPARATOR, 2);
         if (key && value !== undefined) {
           envVars[key] = value;
         }
@@ -48,7 +58,7 @@ export class CommandParserService {
 
     // 작업 디렉토리 추출
     let cwd: string | undefined;
-    const cwdIndex = filteredArgs.findIndex(arg => arg === '--cwd' || arg === '-d');
+    const cwdIndex = filteredArgs.findIndex(arg => arg === CommandParserService.CWD_OPTION || arg === CommandParserService.CWD_OPTION_SHORT);
     if (cwdIndex !== -1 && cwdIndex + 1 < filteredArgs.length) {
       cwd = filteredArgs[cwdIndex + 1];
       filteredArgs.splice(cwdIndex, 2);
@@ -56,12 +66,12 @@ export class CommandParserService {
 
     // 타임아웃 추출
     let timeout: number | undefined;
-    const timeoutIndex = filteredArgs.findIndex(arg => arg === '--timeout' || arg === '-t');
+    const timeoutIndex = filteredArgs.findIndex(arg => arg === CommandParserService.TIMEOUT_OPTION || arg === CommandParserService.TIMEOUT_OPTION_SHORT);
     if (timeoutIndex !== -1 && timeoutIndex + 1 < filteredArgs.length) {
       const timeoutStr = filteredArgs[timeoutIndex + 1];
       if (timeoutStr) {
-        timeout = parseInt(timeoutStr, 10);
-        if (isNaN(timeout) || timeout <= 0) {
+        timeout = parseInt(timeoutStr, CommandParserService.BASE_10_RADIX);
+        if (isNaN(timeout) || timeout <= CommandParserService.MIN_TIMEOUT_VALUE) {
           throw new Error(`Invalid timeout value: ${timeoutStr}`);
         }
       }
@@ -149,7 +159,7 @@ export class CommandParserService {
     }
 
     // 타임아웃이 유효한지 확인
-    if (command.timeout !== undefined && (command.timeout <= 0 || command.timeout > 3600)) {
+    if (command.timeout !== undefined && (command.timeout <= CommandParserService.MIN_TIMEOUT_VALUE || command.timeout > 3600)) {
       errors.push('Timeout must be between 1 and 3600 seconds');
     }
 

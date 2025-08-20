@@ -188,7 +188,7 @@ export class WorkflowParserService {
               file: filePath, 
               index, 
               stepId: step.id,
-              errors: validation.errors 
+              errors: validation.errors || ['Unknown template validation error']
             });
           }
         }
@@ -209,7 +209,7 @@ export class WorkflowParserService {
                   file: filePath, 
                   index, 
                   stepId: step.id,
-                  errors: validation.errors 
+                  errors: validation.errors || ['Unknown command validation error']
                 });
               }
             }
@@ -233,7 +233,7 @@ export class WorkflowParserService {
               file: filePath, 
               index, 
               stepId: step.id,
-              errors: validation.errors 
+              errors: validation.errors || ['Unknown branch validation error']
             });
           }
         }
@@ -249,7 +249,7 @@ export class WorkflowParserService {
               file: filePath, 
               index, 
               stepId: step.id,
-              errors: validation.errors 
+              errors: validation.errors || ['Unknown policy validation error']
             });
           }
           parsedPolicy = this.gitPolicy.initializePolicy(step.policy as any);

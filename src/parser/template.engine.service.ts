@@ -2,6 +2,19 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class TemplateEngineService {
+  // 자주 사용되는 정규식을 상수로 분리하여 성능 최적화
+  private static readonly THIS_PROPERTY_REGEX = /\{\{this\.([^}]+)\}\}/g;
+  private static readonly THIS_REGEX = /\{\{this\}\}/g;
+  private static readonly VARIABLE_REGEX = /\$\{([^}]+)\}/g;
+  private static readonly IF_TAG_REGEX = /\{\{#if/g;
+  private static readonly ENDIF_TAG_REGEX = /\{\{\/if\}\}/g;
+  private static readonly EACH_TAG_REGEX = /\{\{#each/g;
+  private static readonly ENDEACH_TAG_REGEX = /\{\{\/each\}\}/g;
+  private static readonly OPEN_BRACES_REGEX = /\{\{/g;
+  private static readonly CLOSE_BRACES_REGEX = /\}\}/g;
+  private static readonly VARIABLE_OPEN_REGEX = /\$\{/g;
+  private static readonly VARIABLE_CLOSE_REGEX = /\$\{[^}]*\}/g;
+
   /**
    * 프롬프트 템플릿을 처리하고 변수를 치환합니다.
    * @param template 템플릿 문자열
@@ -39,7 +52,7 @@ export class TemplateEngineService {
     template: string,
     variables: Record<string, unknown>
   ): string {
-    return template.replace(/\$\{([^}]+)\}/g, (match, varName) => {
+    return template.replace(TemplateEngineService.VARIABLE_REGEX, (match, varName) => {
       const value = this.getNestedValue(variables, varName.trim());
       return value !== undefined ? String(value) : match;
     });
@@ -103,10 +116,10 @@ export class TemplateEngineService {
           return array.map(item => {
             let itemContent = content;
             // {{this}} 를 현재 아이템으로 치환
-            itemContent = itemContent.replace(/\{\{this\}\}/g, String(item));
+            itemContent = itemContent.replace(TemplateEngineService.THIS_REGEX, String(item));
             // {{this.property}} 형태도 처리
             if (typeof item === 'object' && item !== null) {
-              itemContent = itemContent.replace(/\{\{this\.([^}]+)\}\}/g, (match: string, prop: string) => {
+              itemContent = itemContent.replace(TemplateEngineService.THIS_PROPERTY_REGEX, (match: string, prop: string) => {
                 return (item as Record<string, unknown>)[prop] !== undefined 
                   ? String((item as Record<string, unknown>)[prop]) 
                   : match;
@@ -180,29 +193,29 @@ export class TemplateEngineService {
     const errors: string[] = [];
 
     // ${} 변수 중괄호 짝 맞추기 검사 (템플릿 태그와 구분)
-    const variableOpenBraces = (template.match(/\$\{/g) || []).length;
-    const variableCloseBraces = (template.match(/\$\{[^}]*\}/g) || []).length;
+    const variableOpenBraces = (template.match(TemplateEngineService.VARIABLE_OPEN_REGEX) || []).length;
+    const variableCloseBraces = (template.match(TemplateEngineService.VARIABLE_CLOSE_REGEX) || []).length;
     if (variableOpenBraces !== variableCloseBraces) {
       errors.push('Unmatched variable braces in template');
     }
 
     // {{}} 템플릿 태그 중괄호 짝 맞추기 검사
-    const templateOpenBraces = (template.match(/\{\{/g) || []).length;
-    const templateCloseBraces = (template.match(/\}\}/g) || []).length;
+    const templateOpenBraces = (template.match(TemplateEngineService.OPEN_BRACES_REGEX) || []).length;
+    const templateCloseBraces = (template.match(TemplateEngineService.CLOSE_BRACES_REGEX) || []).length;
     if (templateOpenBraces !== templateCloseBraces) {
       errors.push('Unmatched template braces in template');
     }
 
     // 조건문 짝 맞추기 검사
-    const ifCount = (template.match(/\{\{#if/g) || []).length;
-    const endIfCount = (template.match(/\{\{\/if\}\}/g) || []).length;
+    const ifCount = (template.match(TemplateEngineService.IF_TAG_REGEX) || []).length;
+    const endIfCount = (template.match(TemplateEngineService.ENDIF_TAG_REGEX) || []).length;
     if (ifCount !== endIfCount) {
       errors.push('Unmatched if/endif tags in template');
     }
 
     // 반복문 짝 맞추기 검사
-    const eachCount = (template.match(/\{\{#each/g) || []).length;
-    const endEachCount = (template.match(/\{\{\/each\}\}/g) || []).length;
+    const eachCount = (template.match(TemplateEngineService.EACH_TAG_REGEX) || []).length;
+    const endEachCount = (template.match(TemplateEngineService.ENDEACH_TAG_REGEX) || []).length;
     if (eachCount !== endEachCount) {
       errors.push('Unmatched each/endeach tags in template');
     }
