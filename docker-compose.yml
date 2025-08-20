@@ -6,10 +6,10 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "5849:5849"
     environment:
       - NODE_ENV=development
-      - PORT=3000
+      - PORT=5849
     volumes:
       - .:/app
       - /app/node_modules
@@ -23,10 +23,10 @@ services:
       context: .
       dockerfile: Dockerfile.dashboard
     ports:
-      - "3001:3000"
+      - "5850:5850"
     environment:
       - NODE_ENV=development
-      - NEXT_PUBLIC_API_URL=http://localhost:3000
+      - NEXT_PUBLIC_API_URL=http://localhost:5849/api
     volumes:
       - .:/app
       - /app/node_modules
