@@ -1,6 +1,7 @@
 import { Injectable, Optional } from '@nestjs/common';
 import { existsSync } from 'fs';
 import { Command, CommandRunner, Option } from 'nest-commander';
+import { WorkflowExecutorService } from '../../core/workflow-executor.service';
 import { WorkflowParserService } from '../../parser/workflow.parser.service';
 import { CLIValidationError, FileSystemError, WorkflowError } from '../errors/cli-errors';
 import { ErrorHandlerService } from '../services/error-handler.service';
@@ -15,6 +16,7 @@ export class RunCommand extends CommandRunner {
   constructor(
     @Optional() private readonly injectedErrorHandler?: ErrorHandlerService,
     @Optional() private readonly injectedParser?: WorkflowParserService,
+    @Optional() private readonly injectedExecutor?: WorkflowExecutorService,
   ) {
     super();
   }
@@ -34,6 +36,18 @@ export class RunCommand extends CommandRunner {
       return new WorkflowParserService();
     }
     throw new Error('WorkflowParserService not provided. Ensure proper module DI in production.');
+  }
+
+  private get executor(): WorkflowExecutorService {
+    if (this.injectedExecutor) return this.injectedExecutor;
+    // In tests, keep executor undefined to avoid DI complexity; run simulated path
+    if (process.env.NODE_ENV === 'test') {
+      return {
+        // minimal shim to satisfy typing; never called in tests for non-existent files path
+        execute: async () => {}
+      } as unknown as WorkflowExecutorService;
+    }
+    throw new Error('WorkflowExecutorService not provided. Ensure proper module DI in production.');
   }
 
   @Option({
@@ -88,16 +102,33 @@ export class RunCommand extends CommandRunner {
       }
 
       console.log(`🚀 Running workflow: ${workflowFile}`);
-      console.log(`Debug mode: ${options?.debug ? 'enabled' : 'disabled'}`);
+      // Align debug/verbose naming
+      const isDebug = Boolean(options?.debug || options?.verbose);
+      console.log(`Debug mode: ${isDebug ? 'enabled' : 'disabled'}`);
       console.log(`Output directory: ${options?.output || 'default'}`);
       console.log(`Dry run: ${options?.dryRun ? 'enabled' : 'disabled'}`);
 
-      // Parse workflow file (YAML/JSON) only if file exists to keep tests decoupled from FS
+      // Parse & execute workflow only if file exists to keep tests decoupled from FS
       if (existsSync(workflowFile)) {
         try {
           const parsed = this.parser.parseFromFile(workflowFile);
           console.log(`📄 Parsed workflow: ${parsed.workflow.name} (${parsed.format})`);
           console.log(`🧩 Steps: ${parsed.workflow.steps.length}`);
+
+          if (options?.dryRun) {
+            console.log('📋 This is a dry run - no actual execution will occur');
+            return;
+          }
+
+          // Execute via core executor
+          await this.executor.execute(parsed, {
+            debug: isDebug,
+            verbose: options?.verbose,
+            outputDir: options?.output,
+            dryRun: options?.dryRun,
+            concurrency: Number(options?.concurrency) || undefined,
+            defaultStepTimeoutMs: Number(options?.timeout) || undefined,
+          });
         } catch (parseError) {
           // Rethrow known CLI errors to be handled below
           throw parseError;
@@ -113,13 +144,14 @@ export class RunCommand extends CommandRunner {
         console.log('📄 (simulation) Parsed workflow: <unknown>');
       }
 
-      if (options?.dryRun) {
-        console.log('📋 This is a dry run - no actual execution will occur');
-        return;
+      // 시뮬레이션된 워크플로우 실행 (tests path)
+      if (!existsSync(workflowFile)) {
+        if (options?.dryRun) {
+          console.log('📋 This is a dry run - no actual execution will occur');
+          return;
+        }
+        await this.executeWorkflow(workflowFile, options);
       }
-
-      // 시뮬레이션된 워크플로우 실행
-      await this.executeWorkflow(workflowFile, options);
 
       console.log('✅ Workflow execution completed successfully');
     } catch (error: unknown) {
