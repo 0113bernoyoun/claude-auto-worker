@@ -1,0 +1,184 @@
+name: "DSL 파싱 테스트 워크플로우"
+description: "TASK-016에서 구현한 DSL 파싱 엔진을 테스트하기 위한 워크플로우"
+version: "1.0.0"
+
+variables:
+  api_key: "${CLAUDE_API_KEY}"
+  model: "claude-3-sonnet-20240229"
+  temperature: 0.7
+  project_name: "claude-auto-worker"
+  base_branch: "main"
+
+stages:
+  - id: "preparation"
+    name: "준비 단계"
+    description: "워크플로우 실행을 위한 사전 준비"
+    steps: ["setup", "validate"]
+    parallel: false
+
+  - id: "execution"
+    name: "실행 단계"
+    description: "메인 워크플로우 실행"
+    steps: ["analyze", "generate", "test"]
+    depends_on: "preparation"
+    parallel: true
+
+  - id: "cleanup"
+    name: "정리 단계"
+    description: "실행 후 정리 작업"
+    steps: ["cleanup", "report"]
+    depends_on: "execution"
+    parallel: false
+
+steps:
+  - id: "setup"
+    name: "환경 설정"
+    type: "setup"
+    description: "작업 환경을 설정합니다"
+    run: "mkdir -p ./temp && echo 'Environment ready' > ./temp/status.txt"
+    branch: "${base_branch}-setup-${project_name}"
+    policy:
+      retry:
+        max_attempts: 3
+        delay_ms: 1000
+        backoff_multiplier: 2
+      timeout:
+        seconds: 60
+      rollback:
+        enabled: true
+        steps: ["cleanup"]
+
+  - id: "validate"
+    name: "입력 검증"
+    type: "validation"
+    description: "입력 데이터의 유효성을 검증합니다"
+    prompt: |
+      다음 프로젝트 정보를 검증해주세요:
+      
+      프로젝트명: ${project_name}
+      모델: ${model}
+      온도: ${temperature}
+      
+      검증 요구사항:
+      1. 프로젝트명이 유효한지 확인
+      2. 모델명이 지원되는지 확인
+      3. 온도 값이 적절한 범위인지 확인
+      
+      {{#if api_key}}
+      API 키가 설정되어 있습니다.
+      {{else}}
+      API 키가 설정되지 않았습니다.
+      {{/if}}
+      
+      설정:
+      - 모델: ${model}
+      - 온도: ${temperature}
+    depends_on: "setup"
+
+  - id: "analyze"
+    name: "코드 분석"
+    type: "claude"
+    description: "프로젝트 코드를 분석합니다"
+    prompt: |
+      다음 프로젝트의 코드 구조를 분석해주세요:
+      
+      프로젝트: ${project_name}
+      
+      {{#each files}}
+      파일: ${this.name}
+      경로: ${this.path}
+      {{/each}}
+      
+      분석 요구사항:
+      1. 전체 아키텍처 구조 파악
+      2. 주요 모듈과 의존성 관계 분석
+      3. 코드 품질 및 개선점 식별
+      4. 한국어로 응답
+      
+      설정:
+      - 모델: ${model}
+      - 온도: ${temperature}
+    depends_on: "validate"
+    policy:
+      retry:
+        max_attempts: 2
+        delay_ms: 2000
+      timeout:
+        seconds: 120
+
+  - id: "generate"
+    name: "코드 생성"
+    type: "claude"
+    description: "분석 결과를 바탕으로 코드를 생성합니다"
+    prompt: |
+      이전 분석 결과를 바탕으로 다음 코드를 생성해주세요:
+      
+      분석 결과:
+      ${analyze.content}
+      
+      생성 요구사항:
+      1. 분석 결과에 따른 개선된 코드 구조 제안
+      2. 새로운 기능 구현을 위한 코드 템플릿 생성
+      3. 테스트 코드 예시 포함
+      4. 한국어 주석 포함
+      
+      설정:
+      - 모델: ${model}
+      - 온도: ${temperature}
+    depends_on: "analyze"
+    branch: "${base_branch}-feature-${project_name}-generation"
+    policy:
+      timeout:
+        seconds: 180
+
+  - id: "test"
+    name: "테스트 실행"
+    type: "execution"
+    description: "생성된 코드를 테스트합니다"
+    run: |
+      npm install
+      npm run test
+      npm run lint
+    depends_on: "generate"
+    policy:
+      retry:
+        max_attempts: 3
+        delay_ms: 5000
+        backoff_multiplier: 1.5
+      timeout:
+        seconds: 300
+
+  - id: "cleanup"
+    name: "정리 작업"
+    type: "cleanup"
+    description: "임시 파일들을 정리합니다"
+    run: "rm -rf ./temp && echo 'Cleanup completed'"
+    depends_on: "test"
+
+  - id: "report"
+    name: "결과 보고"
+    type: "output"
+    description: "워크플로우 실행 결과를 보고합니다"
+    format: "markdown"
+    content: |
+      # 워크플로우 실행 결과
+      
+      ## 실행 단계
+      - 준비 단계: ${setup.status}
+      - 검증 단계: ${validate.status}
+      - 분석 단계: ${analyze.status}
+      - 생성 단계: ${generate.status}
+      - 테스트 단계: ${test.status}
+      - 정리 단계: ${cleanup.status}
+      
+      ## 주요 결과
+      ${analyze.summary}
+      
+      ## 생성된 코드
+      ${generate.content}
+      
+      ## 테스트 결과
+      ${test.results}
+      
+      실행 완료 시간: ${CURRENT_TIMESTAMP}
+    depends_on: "cleanup"
