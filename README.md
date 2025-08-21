@@ -254,6 +254,21 @@ npm run format
 npm run build
 ```
 
+### 🔧 GitHub 통합 옵션
+
+- 환경변수
+  - `USE_GITHUB`: `true|false` (기본 true) — 전체 GitHub 통합 사용 여부
+  - `GITHUB_MODE`: `auto|cli|token|manual` (기본 `auto`) — 사용 모드 지정
+  - `GITHUB_TOKEN`: token 모드에서 사용되는 GitHub Personal Access Token
+  - `GITHUB_API_BASE`: GitHub Enterprise 등 API base override (옵션)
+
+- 설정 파일(`claude-auto-worker.config.yaml`) 예시
+```yaml
+github:
+  enabled: true
+  mode: auto # or cli|token|manual
+```
+
 ## 📄 라이선스
 
 이 프로젝트는 [MIT 라이선스](LICENSE) 하에 배포됩니다.

@@ -95,6 +95,59 @@ describe('GithubIntegrationService (unit)', () => {
     expect(out.mode).toBe('manual');
     expect(out.url).toContain('/compare/');
   });
+
+  it('token mode: non-ok response should fall back to manual', async () => {
+    const prev = (global as any).fetch;
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: false });
+
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        GithubIntegrationService,
+        {
+          provide: ProjectConfigService,
+          useValue: { getResolvedConfig: () => ({ github: { enabled: true, mode: 'token' } }) },
+        },
+        {
+          provide: CommandRunnerService,
+          useValue: { runShell: jest.fn().mockResolvedValue({ code: 1 }) },
+        },
+      ],
+    }).compile();
+
+    process.env.GITHUB_TOKEN = 'x';
+    const svc = moduleRef.get(GithubIntegrationService);
+    const out = await svc.createPr({ owner: 'o', repo: 'r', base: 'main', head: 'feat', title: 't' });
+    expect(out.mode).toBe('manual');
+    expect(out.url).toContain('/compare/');
+    if (prev) (global as any).fetch = prev; else delete (global as any).fetch;
+    delete process.env.GITHUB_TOKEN;
+  });
+
+  it('cli mode: success should return compare URL when stdout unavailable', async () => {
+    const moduleRef = await Test.createTestingModule({
+      providers: [
+        GithubIntegrationService,
+        {
+          provide: ProjectConfigService,
+          useValue: { getResolvedConfig: () => ({ github: { enabled: true, mode: 'cli' } }) },
+        },
+        {
+          provide: CommandRunnerService,
+          useValue: {
+            runShell: jest.fn()
+              .mockResolvedValueOnce({ code: 0 }) // gh --version
+              .mockResolvedValueOnce({ code: 0 }) // gh auth status
+              .mockResolvedValueOnce({ code: 0 }), // gh pr create
+          },
+        },
+      ],
+    }).compile();
+
+    const svc = moduleRef.get(GithubIntegrationService);
+    const out = await svc.createPr({ owner: 'o', repo: 'r', base: 'main', head: 'feat', title: 't' });
+    expect(out.mode).toBe('cli');
+    expect(out.url).toContain('/compare/');
+  });
 });
 
 
