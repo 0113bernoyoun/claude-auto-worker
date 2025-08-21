@@ -3,8 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule } from './core/core.module';
-import { StatusController } from './status.controller';
-import { LogsController } from './logs.controller';
+import { MonitoringModule } from './monitoring/monitoring.module';
 
 @Module({
   imports: [
@@ -13,8 +12,9 @@ import { LogsController } from './logs.controller';
       envFilePath: ['.env.local', '.env'],
     }),
     CoreModule,
+    MonitoringModule,
   ],
-  controllers: [AppController, StatusController, LogsController],
+  controllers: [AppController],
   providers: [AppService],
 })
 export class AppModule {}
