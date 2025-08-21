@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { LoggingConfigService } from '../config/logging-config.service';
 import { ProjectConfigService } from '../config/project-config.service';
 import { GitService } from '../git/git.service';
+import { GIT_BASE_DIR } from '../git/git.tokens';
 import { ParserModule } from '../parser/parser.module';
 import { CommandRunnerService } from './command-runner.service';
 import { EnhancedLogParserService } from './enhanced-log-parser.service';
@@ -24,6 +25,10 @@ import { WorkflowStateTrackerService } from './workflow-state-tracker.service';
     LoggingConfigService,
     ProjectConfigService,
     GitService,
+    {
+      provide: GIT_BASE_DIR,
+      useFactory: () => process.env.GIT_BASE_DIR || process.cwd(),
+    },
   ],
   exports: [
     ExecutionStateService,

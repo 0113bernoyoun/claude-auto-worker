@@ -1,17 +1,22 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger, Optional } from '@nestjs/common';
 import { simpleGit, SimpleGit } from 'simple-git';
+import { GIT_BASE_DIR } from './git.tokens';
 
 @Injectable()
 export class GitService {
   private readonly logger = new Logger(GitService.name);
   private gitInstance?: SimpleGit;
+  private hasWarnedNotRepo = false;
 
-  constructor() {}
+  constructor(
+    @Optional() @Inject(GIT_BASE_DIR) private readonly injectedBaseDir?: string,
+  ) {}
 
   private getGit(): SimpleGit | undefined {
     if (this.gitInstance) return this.gitInstance;
     try {
-      this.gitInstance = simpleGit({ baseDir: process.cwd() });
+      const baseDir = this.injectedBaseDir || process.env.GIT_BASE_DIR || process.cwd();
+      this.gitInstance = simpleGit({ baseDir });
       return this.gitInstance;
     } catch (e) {
       this.logger.warn(`Failed to initialize simple-git: ${String((e as Error)?.message || e)}`);
@@ -36,7 +41,12 @@ export class GitService {
   async ensureRepo(): Promise<boolean> {
     const inRepo = await this.isRepository();
     if (!inRepo) {
-      this.logger.warn('Not a git repository. Git operations will be skipped.');
+      if (!this.hasWarnedNotRepo) {
+        this.logger.warn('Not a git repository. Git operations will be skipped.');
+        this.hasWarnedNotRepo = true;
+      } else {
+        this.logger.debug('Not a git repository (suppressed repeat warning).');
+      }
       return false;
     }
     return true;
