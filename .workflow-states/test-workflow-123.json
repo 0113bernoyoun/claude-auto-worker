@@ -1,0 +1,72 @@
+{
+  "runId": "test-workflow-123",
+  "workflowName": "test-workflow",
+  "status": "completed",
+  "progress": 100,
+  "startedAt": "2025-01-21T14:12:00.000Z",
+  "updatedAt": "2025-01-21T14:12:13.000Z",
+  "completedAt": "2025-01-21T14:12:13.000Z",
+  "stages": {
+    "setup": {
+      "id": "setup",
+      "name": "setup",
+      "status": "completed",
+      "progress": 100,
+      "startedAt": "2025-01-21T14:12:01.000Z",
+      "completedAt": "2025-01-21T14:12:06.000Z",
+      "steps": {
+        "init": {
+          "id": "init",
+          "name": "init",
+          "status": "completed",
+          "startedAt": "2025-01-21T14:12:02.000Z",
+          "completedAt": "2025-01-21T14:12:03.000Z",
+          "attempts": 1
+        },
+        "config": {
+          "id": "config",
+          "name": "config",
+          "status": "completed",
+          "startedAt": "2025-01-21T14:12:04.000Z",
+          "completedAt": "2025-01-21T14:12:05.000Z",
+          "attempts": 1
+        }
+      },
+      "totalSteps": 2,
+      "completedSteps": 2,
+      "failedSteps": 0
+    },
+    "process": {
+      "id": "process",
+      "name": "process",
+      "status": "completed",
+      "progress": 100,
+      "startedAt": "2025-01-21T14:12:07.000Z",
+      "completedAt": "2025-01-21T14:12:12.000Z",
+      "steps": {
+        "analyze": {
+          "id": "analyze",
+          "name": "analyze",
+          "status": "completed",
+          "startedAt": "2025-01-21T14:12:08.000Z",
+          "completedAt": "2025-01-21T14:12:09.000Z",
+          "attempts": 1
+        },
+        "execute": {
+          "id": "execute",
+          "name": "execute",
+          "status": "completed",
+          "startedAt": "2025-01-21T14:12:10.000Z",
+          "completedAt": "2025-01-21T14:12:11.000Z",
+          "attempts": 1
+        }
+      },
+      "totalSteps": 2,
+      "completedSteps": 2,
+      "failedSteps": 0
+    }
+  },
+  "totalSteps": 4,
+  "completedSteps": 4,
+  "failedSteps": 0
+}
