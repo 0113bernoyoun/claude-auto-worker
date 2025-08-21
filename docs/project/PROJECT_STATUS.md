@@ -35,6 +35,7 @@
   - ✅ PR #25 머지: Git 통합 및 테스트 안정화 (TASK-022)
   - ✅ PR #28 머지: 테스트 러너/품질 보증 보강 및 모니터링/대시보드 개선 (TASK-024)
   - ✅ PR #29 머지: 대시보드 MVP + 상태/로그 API (TASK-026/027/028)
+- ✅ PR #30 머지: 로컬 실행 환경 그룹 완성 (TASK-066/067/068/069) - Node 20.x 지원, 비-Docker 로컬 실행/검증 도구
 
 ### 핵심 가치 제안
 1. **안전한 자동화**: Git 브랜치 격리, 테스트 자동화, 정책 기반 필터링
@@ -179,7 +180,7 @@
 |------|------|------|------|
 | **NestJS** | 10.x | 백엔드 프레임워크 | Express.js, Fastify |
 | **TypeScript** | 5.x | 타입 안전성 및 개발 생산성 | JavaScript |
-| **Node.js** | 18.x LTS | 런타임 환경 | Deno, Bun |
+| **Node.js** | 20.x LTS | 런타임 환경 | Deno, Bun |
 | **Prisma** | 5.x | 데이터베이스 ORM | TypeORM, Sequelize |
 
 ### CLI & Command Line

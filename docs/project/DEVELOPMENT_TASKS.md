@@ -244,51 +244,59 @@
 **포함 태스크**: TASK-066, TASK-067, TASK-068, TASK-069
 **예상 총 시간**: 18시간
 **그룹 완료 기준**: 
-- [ ] 로컬(비-Docker) 실행 파이프라인 구성 완료
-- [ ] 환경변수 및 설정 폴백 시스템 정비
-- [ ] 로컬 개발 셋업 스크립트 및 검증 도구 제공
-- [ ] 로컬 실행 경로 테스트 및 검증 플로우 완성
+- [x] 로컬(비-Docker) 실행 파이프라인 구성 완료
+- [x] 환경변수 및 설정 폴백 시스템 정비
+- [x] 로컬 개발 셋업 스크립트 및 검증 도구 제공
+- [x] 로컬 실행 경로 테스트 및 검증 플로우 완성
 
 ---
 
 ### 🔴 높은 우선순위 태스크
 
-#### TASK-066: 로컬(비-Docker) 실행 파이프라인 구성
+#### TASK-066: 로컬(비-Docker) 실행 파이프라인 구성 ✅
 - **예상 시간**: 6시간
 - **담당 영역**: 개발 환경/백엔드
 - **의존성**: TASK-002, TASK-003
 - **완료 기준**:
-  - [ ] `npm run start:dev`/`npm run start` 로 컨테이너 없이 동작(기본 포트 5849)
-  - [ ] `bin/claude-auto-worker` 로컬 링크(`npm link`) 실행 확인
-  - [ ] `NODE_ENV`, `PORT(5849)` 등 필수 환경변수 기본값 적용
-  - [ ] macOS/Linux 기준 기본 의존성(Node 20 LTS) 확인 스크립트
+  - [x] `npm run start:dev`/`npm run start` 로 컨테이너 없이 동작(기본 포트 5849)
+  - [x] `bin/claude-auto-worker` 로컬 링크(`npm link`) 실행 확인
+  - [x] `NODE_ENV`, `PORT(5849)` 등 필수 환경변수 기본값 적용
+  - [x] macOS/Linux 기준 기본 의존성(Node 20 LTS) 확인 스크립트
+- **완료일**: 2025년 8월 21일
+- **PR**: [#30](https://github.com/0113bernoyoun/claude-auto-worker/pull/30)
 
-#### TASK-067: .env.example 및 설정 폴백 정비 (비-Docker)
+#### TASK-067: .env.example 및 설정 폴백 정비 (비-Docker) ✅
 - **예상 시간**: 3시간
 - **담당 영역**: 설정/백엔드
 - **의존성**: TASK-010
 - **완료 기준**:
-  - [ ] `.env.example`에 로컬 실행 기본값(포트 5849) 정리
-  - [ ] `src/config/`의 서비스가 환경변수 미설정 시 안전한 기본값 사용
-  - [ ] README에 `.env` 복사/설명 추가 항목 연결(문서 작업은 별도 태스크에서 완료)
+  - [x] `.env.example`에 로컬 실행 기본값(포트 5849) 정리
+  - [x] `src/config/`의 서비스가 환경변수 미설정 시 안전한 기본값 사용
+  - [x] README에 `.env` 복사/설명 추가 항목 연결(문서 작업은 별도 태스크에서 완료)
+- **완료일**: 2025년 8월 21일
+- **PR**: [#30](https://github.com/0113bernoyoun/claude-auto-worker/pull/30)
 
-#### TASK-068: 로컬 개발 셋업 스크립트 제공
+#### TASK-068: 로컬 개발 셋업 스크립트 제공 ✅
 - **예상 시간**: 4시간
 - **담당 영역**: DevEx/도구
 - **의존성**: TASK-066, TASK-067
 - **완료 기준**:
-  - [ ] `tools/setup-local.sh` (macOS/Linux) 의존성 점검/설치 가이드 출력
-  - [ ] `tools/check-local.mjs` 로 빌드/테스트/포트 헬스체크 자동 검증
-  - [ ] 실패 시 가이드 메시지와 해결책 링크 출력
+  - [x] `tools/setup-local.sh` (macOS/Linux) 의존성 점검/설치 가이드 출력
+  - [x] `tools/check-local.mjs` 로 빌드/테스트/포트 헬스체크 자동 검증
+  - [x] 실패 시 가이드 메시지와 해결책 링크 출력
+- **완료일**: 2025년 8월 21일
+- **PR**: [#30](https://github.com/0113bernoyoun/claude-auto-worker/pull/30)
 
-#### TASK-069: 로컬(비-Docker) 경로 테스트/검증 플로우
+#### TASK-069: 로컬(비-Docker) 경로 테스트/검증 플로우 ✅
 - **예상 시간**: 5시간
 - **담당 영역**: 테스트
 - **의존성**: TASK-012, TASK-066
 - **완료 기준**:
-  - [ ] `npm run verify:local` 스크립트로 빌드→유닛테스트→샘플 CLI 실행 자동화
-  - [ ] `docs/examples/basic/hello-world.yaml` 기준 smoke 테스트 통과
-  - [ ] 비-Docker 경로에서 CLI/서버 동시 동작 확인 체크리스트
+  - [x] `npm run verify:local` 스크립트로 빌드→유닛테스트→샘플 CLI 실행 자동화
+  - [x] `docs/examples/basic/hello-world.yaml` 기준 smoke 테스트 통과
+  - [x] 비-Docker 경로에서 CLI/서버 동시 동작 확인 체크리스트
+- **완료일**: 2025년 8월 21일
+- **PR**: [#30](https://github.com/0113bernoyoun/claude-auto-worker/pull/30)
 
 ### 🟡 보통 우선순위 태스크
 

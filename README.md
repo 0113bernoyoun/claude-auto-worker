@@ -3,7 +3,7 @@
 > 차세대 Claude Code 자동화 도구 - 안전하고, 유연하고, 확장 가능한 워크플로우 엔진
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Node.js](https://img.shields.io/badge/Node.js-18.x-green.svg)](https://nodejs.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-20.x-green.svg)](https://nodejs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
 [![NestJS](https://img.shields.io/badge/NestJS-10.x-red.svg)](https://nestjs.com/)
 [![Next.js](https://img.shields.io/badge/Next.js-14.x-black.svg)](https://nextjs.org/)
@@ -78,7 +78,7 @@ claude-auto-worker/
 
 ### 🔧 필수 요구사항
 
-- **Node.js** 18.x 이상
+- **Node.js** 20.x 이상
 - **Git** 2.x 이상
 - **Claude API Key** (Anthropic)
 
@@ -138,7 +138,7 @@ npm run start:dev
 
 ### 📈 전체 현황
 - **총 태스크**: 88개 (10개 스프린트)
-- **완료된 태스크**: 20개 (약 23%)
+- **완료된 태스크**: 24개 (약 27%)
 - **예상 완료**: 20주 (800시간)
 - **현재 스프린트**: 4A/10 (Claude CLI 모드 통합 - CLI 기능 대폭 향상 완료)
 
@@ -171,6 +171,13 @@ npm run start:dev
   - 새로운 enhanced-logs, enhanced-status 명령어 추가
   - 워크플로우 상태 추적 시스템 구현
   - 진행률 시각화 및 다양한 출력 형식 지원
+
+#### 🏠 **로컬 실행 환경** (TASK-066 ~ TASK-069) ✅
++- 비-Docker 로컬 실행 파이프라인 구성
++- .env.example 자동 생성 및 설정 폴백
++- 로컬 셋업/검증 도구 제공
++- 일괄 검증 스크립트로 빌드→테스트→헬스체크→CLI 드라이런 자동화
++  - **PR #30**: 로컬 실행 환경 그룹 완료
 
 ### 🔄 현재 진행 중인 작업
 - **스프린트 4A**: Claude CLI 모드 통합 및 로깅 시스템 최적화
