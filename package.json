@@ -26,7 +26,10 @@
     "cli:dev": "ts-node src/cli/main.ts",
     "dashboard:dev": "next dev src/dashboard -p 5850",
     "dashboard:build": "next build src/dashboard",
-    "dashboard:start": "next start src/dashboard -p 5850"
+    "dashboard:start": "next start src/dashboard -p 5850",
+    "setup:local": "bash tools/setup-local.sh",
+    "verify:local": "node tools/check-local.mjs",
+    "env:example": "node tools/generate-env-example.mjs"
   },
   "dependencies": {
     "@nestjs/cli": "^10.0.0",
@@ -127,7 +130,7 @@
   },
   "homepage": "https://github.com/your-username/claude-auto-worker#readme",
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.0.0",
     "npm": ">=8.0.0"
   }
 }
