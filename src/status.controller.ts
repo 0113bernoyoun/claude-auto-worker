@@ -1,8 +1,8 @@
 import { Controller, Get, HttpException, HttpStatus, Query } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
-import { WorkflowStateTrackerService, WorkflowStateSnapshot } from './core/workflow-state-tracker.service';
 import { FileLoggerService } from './core/file-logger.service';
+import { WorkflowStateSnapshot, WorkflowStateTrackerService } from './core/workflow-state-tracker.service';
 
 @Controller()
 export class StatusController {
