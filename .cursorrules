@@ -278,3 +278,45 @@ NODE_ENV=development
 - TypeScript 핸드북: https://www.typescriptlang.org/docs/
 - 프로젝트 문서: ./docs/ 디렉토리
 - **핵심 문서**: PRD, TRD, DEVELOPMENT_TASKS, PROJECT_STATUS 파일들
+
+---
+
+## 📚 문서 참조 및 구조 규칙
+
+### 📁 문서 디렉토리 구조
+```
+claude-auto-worker/
+├── docs/
+│   ├── project/                    # 프로젝트 핵심 문서
+│   │   ├── PRD.md                 # 제품 요구사항
+│   │   ├── TRD.md                 # 기술 요구사항
+│   │   ├── DEVELOPMENT_TASKS.md   # 개발 태스크
+│   │   └── PROJECT_STATUS.md      # 프로젝트 상태
+│   ├── user-guide/                # 사용자 가이드
+│   ├── examples/                  # 예시 파일들
+│   └── development/               # 개발자 문서
+│       └── dev-notes/             # 개발 노트
+├── README.md                      # 프로젝트 소개 (현재 상태 유지)
+└── [기존 문서들 - 점진적 마이그레이션]
+```
+
+### 🧠 AI 에이전트 문서 참조 규칙
+- **프로젝트 요구사항 확인**: `docs/project/PRD.md` 참조
+- **기술적 구현 방법**: `docs/project/TRD.md` 참조  
+- **개발 태스크 및 우선순위**: `docs/project/DEVELOPMENT_TASKS.md` 참조
+- **프로젝트 진행 상황**: `docs/project/PROJECT_STATUS.md` 참조
+- **사용자 가이드**: `docs/user-guide/` 디렉토리 참조
+- **개발 노트**: `docs/development/dev-notes/` 디렉토리 참조
+
+### 📝 문서 작성 규칙
+- **새로운 프로젝트 문서**: `docs/project/` 디렉토리에 생성
+- **사용자 가이드**: `docs/user-guide/` 디렉토리에 생성
+- **개발 노트**: `docs/development/dev-notes/` 디렉토리에 생성
+- **예시 파일**: `docs/examples/` 디렉토리에 생성
+- **README.md**: 현재 상태 유지 (프로젝트 소개, 설치 방법, 사용법 등)
+
+### 🔄 문서 마이그레이션 규칙
+- **기존 문서**: 루트에 유지 (참조 경로 보호)
+- **새 문서**: 새 디렉토리 구조에 생성
+- **점진적 전환**: 기존 코드 수정 시 참조 경로도 함께 변경
+- **AI 에이전트**: 항상 새 디렉토리 구조 우선 사용
