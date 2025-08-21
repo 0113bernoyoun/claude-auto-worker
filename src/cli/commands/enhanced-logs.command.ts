@@ -4,6 +4,7 @@ import { Command, CommandRunner, Option } from 'nest-commander';
 import * as path from 'path';
 import * as readline from 'readline';
 import { LoggingConfigService } from '../../config/logging-config.service';
+import { CLI_CONSTANTS } from '../../config/cli.constants';
 import { EnhancedLogParserService, ParsedLogEntry } from '../../core/enhanced-log-parser.service';
 import { FileLogEntry, FileLoggerService } from '../../core/file-logger.service';
 import { WorkflowStateTrackerService } from '../../core/workflow-state-tracker.service';
@@ -15,8 +16,6 @@ import { WorkflowStateTrackerService } from '../../core/workflow-state-tracker.s
   arguments: '[run-id]'
 })
 export class EnhancedLogsCommand extends CommandRunner {
-  private static readonly BUFFER_SIZE = 8192; // 8KB
-  private static readonly LARGE_FILE_THRESHOLD = 10 * 1024 * 1024; // 10MB
   
   private readonly logger = new Logger(EnhancedLogsCommand.name);
   private invalidJsonCount: number = 0;
@@ -156,9 +155,9 @@ export class EnhancedLogsCommand extends CommandRunner {
       const stats = fs.statSync(filePath);
       const fileSize = stats.size;
       
-      if (fileSize > EnhancedLogsCommand.LARGE_FILE_THRESHOLD) {
-        return this.getLastLinesFromLargeFile(filePath, numLines);
-      }
+                   if (fileSize > CLI_CONSTANTS.LARGE_FILE_THRESHOLD) {
+               return this.getLastLinesFromLargeFile(filePath, numLines);
+             }
       
       return this.getLastLinesSimple(filePath, numLines);
     } catch {
@@ -184,7 +183,7 @@ export class EnhancedLogsCommand extends CommandRunner {
       let remainingLines = numLines;
 
       while (remainingLines > 0 && position > 0) {
-        const chunkSize = Math.min(EnhancedLogsCommand.BUFFER_SIZE, position);
+                     const chunkSize = Math.min(CLI_CONSTANTS.BUFFER_SIZE, position);
         const start = Math.max(0, position - chunkSize);
         
         const buffer = Buffer.alloc(chunkSize);

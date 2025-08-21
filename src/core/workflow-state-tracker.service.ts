@@ -52,6 +52,7 @@ export class WorkflowStateTrackerService {
   private readonly logger = new Logger(WorkflowStateTrackerService.name);
   private readonly stateCache = new Map<string, WorkflowStateSnapshot>();
   private readonly stateDir = '.workflow-states';
+  private readonly MAX_CACHE_SIZE = 100; // 최대 캐시 크기 제한
 
   constructor() {
     this.ensureStateDirectory();
@@ -65,6 +66,11 @@ export class WorkflowStateTrackerService {
 
   /**
    * 로그 파일에서 워크플로우 상태를 분석하여 스냅샷 생성
+   * 
+   * @param runId - 워크플로우 실행 ID
+   * @param logFilePath - 로그 파일 경로
+   * @returns 워크플로우 상태 스냅샷 또는 null (분석 실패 시)
+   * @throws Error - 상태 저장 실패 시
    */
   async analyzeWorkflowState(runId: string, logFilePath: string): Promise<WorkflowStateSnapshot | null> {
     try {
@@ -80,7 +86,7 @@ export class WorkflowStateTrackerService {
       const snapshot = this.buildStateSnapshot(runId, entries);
       
       // 상태 캐시에 저장
-      this.stateCache.set(runId, snapshot);
+      this.addToCache(runId, snapshot);
       
       // 파일에 상태 저장
       await this.saveStateSnapshot(runId, snapshot);
@@ -94,6 +100,9 @@ export class WorkflowStateTrackerService {
 
   /**
    * runId로 워크플로우 상태 조회
+   * 
+   * @param runId - 워크플로우 실행 ID
+   * @returns 워크플로우 상태 스냅샷 또는 null (상태를 찾을 수 없는 경우)
    */
   async getWorkflowState(runId: string): Promise<WorkflowStateSnapshot | null> {
     // 캐시에서 먼저 확인
@@ -113,6 +122,8 @@ export class WorkflowStateTrackerService {
 
   /**
    * 모든 워크플로우 상태 목록 조회
+   * 
+   * @returns 워크플로우 상태 스냅샷 배열 (최신 순으로 정렬됨)
    */
   async getAllWorkflowStates(): Promise<WorkflowStateSnapshot[]> {
     const states: WorkflowStateSnapshot[] = [];
@@ -388,6 +399,7 @@ export class WorkflowStateTrackerService {
       await fs.promises.writeFile(filePath, JSON.stringify(snapshot, null, 2));
     } catch (error) {
       this.logger.error(`Failed to save state snapshot for runId: ${runId}`, error);
+      throw new Error(`Failed to save workflow state: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
 
@@ -407,6 +419,21 @@ export class WorkflowStateTrackerService {
       this.logger.error(`Failed to load state snapshot for runId: ${runId}`, error);
       return null;
     }
+  }
+
+  /**
+   * 캐시에 상태 스냅샷 추가 (LRU 정책 적용)
+   */
+  private addToCache(runId: string, snapshot: WorkflowStateSnapshot): void {
+    if (this.stateCache.size >= this.MAX_CACHE_SIZE) {
+      // LRU 정책: 가장 오래된 항목 제거
+      const oldestKey = this.stateCache.keys().next().value;
+      if (oldestKey) {
+        this.stateCache.delete(oldestKey);
+        this.logger.debug(`Removed oldest cache entry: ${oldestKey}`);
+      }
+    }
+    this.stateCache.set(runId, snapshot);
   }
 
   /**

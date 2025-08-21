@@ -31,6 +31,9 @@ export class EnhancedLogParserService {
 
   /**
    * 로그 엔트리를 향상된 형태로 파싱
+   * 
+   * @param entry - 원본 로그 엔트리
+   * @returns 파싱된 로그 엔트리 (상태, 타입, 진행률, 에러 정보 포함)
    */
   parseLogEntry(entry: FileLogEntry): ParsedLogEntry {
     const parsed: ParsedLogEntry = { ...entry };
@@ -52,6 +55,9 @@ export class EnhancedLogParserService {
 
   /**
    * 로그 엔트리 배열을 일괄 파싱
+   * 
+   * @param entries - 원본 로그 엔트리 배열
+   * @returns 파싱된 로그 엔트리 배열
    */
   parseLogEntries(entries: FileLogEntry[]): ParsedLogEntry[] {
     return entries.map(entry => this.parseLogEntry(entry));
@@ -59,6 +65,9 @@ export class EnhancedLogParserService {
 
   /**
    * 로그 분석 결과 생성
+   * 
+   * @param entries - 분석할 로그 엔트리 배열
+   * @returns 로그 분석 결과 (통계, 시간 범위, 상태 분포 등)
    */
   analyzeLogs(entries: FileLogEntry[]): LogAnalysisResult {
     const parsedEntries = this.parseLogEntries(entries);

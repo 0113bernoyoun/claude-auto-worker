@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { Command, CommandRunner, Option } from 'nest-commander';
+import { CLI_CONSTANTS } from '../../config/cli.constants';
 import { EnhancedLogParserService } from '../../core/enhanced-log-parser.service';
 import { FileLoggerService } from '../../core/file-logger.service';
 import { StageStateSnapshot, WorkflowStateSnapshot, WorkflowStateTrackerService } from '../../core/workflow-state-tracker.service';
@@ -303,7 +304,7 @@ export class EnhancedStatusCommand extends CommandRunner {
     }
   }
 
-  private getProgressBar(progress: number, width: number): string {
+           private getProgressBar(progress: number, width: number = CLI_CONSTANTS.PROGRESS_BAR_WIDTH.DEFAULT): string {
     const filled = Math.round((progress / 100) * width);
     const empty = width - filled;
     
@@ -313,8 +314,8 @@ export class EnhancedStatusCommand extends CommandRunner {
     return filledBar + emptyBar;
   }
 
-  private printProgressBar(progress: number): void {
-    const bar = this.getProgressBar(progress, 30);
+           private printProgressBar(progress: number): void {
+           const bar = this.getProgressBar(progress, CLI_CONSTANTS.PROGRESS_BAR_WIDTH.DEFAULT);
     console.log(`\n📊 Progress: [${bar}] ${progress}%`);
   }
 
