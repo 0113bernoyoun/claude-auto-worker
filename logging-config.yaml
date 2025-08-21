@@ -1,0 +1,31 @@
+# Claude Auto Worker 로깅 설정
+# 이 파일을 수정하여 로깅 동작을 커스터마이즈할 수 있습니다.
+
+# 로그 레벨별 저장 제어
+levels:
+  debug: true      # 디버그 로그 저장 여부
+  info: true       # 정보 로그 저장 여부
+  warn: true       # 경고 로그 저장 여부
+  error: true      # 오류 로그 저장 여부
+
+# 로그 저장 옵션
+storage:
+  enabled: true                    # 로그 저장 활성화 여부
+  maxFileSize: "100MB"            # 로그 파일 최대 크기
+  maxFiles: 10                    # 보관할 로그 파일 수
+  compression: true                # 로그 압축 여부
+  rotation:
+    enabled: true                  # 로그 로테이션 활성화
+    interval: "1d"                 # 로테이션 간격 (1d = 1일)
+
+# 로그 표시 옵션
+display:
+  defaultLines: 50                 # 기본 표시 라인 수
+  maxLines: 10000                  # 최대 표시 라인 수
+  showInvalidJson: false           # invalid JSON 라인 표시 여부
+  invalidJsonWarning: true         # invalid JSON 경고 표시 여부
+
+# 시간 파싱 옵션
+timeParsing:
+  supportCompoundUnits: true       # "2h30m" 같은 복합 단위 지원
+  defaultUnit: "h"                 # 기본 시간 단위 (s=초, m=분, h=시간, d=일)
