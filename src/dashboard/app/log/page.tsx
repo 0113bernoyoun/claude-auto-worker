@@ -61,7 +61,6 @@ export default async function LogPage({ searchParams }: { searchParams?: { level
           <meta httpEquiv='refresh' content={String(refresh)} />
         )}
       </form>
-
       <div className='mt-3 text-xs font-mono whitespace-pre-wrap'>
         {entries.length === 0 ? (
           <div className='text-gray-500'>No logs available.</div>
