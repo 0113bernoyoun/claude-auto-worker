@@ -25,6 +25,14 @@ describe('WorkflowExecutorService (unit)', () => {
           provide: (await import('../../core/command-runner.service')).CommandRunnerService,
           useValue: { runShell: jest.fn().mockResolvedValue({ code: 0 }), runClaudeWithInput: jest.fn().mockResolvedValue({ code: 0 }) },
         },
+        {
+          provide: (await import('../../git/git.service')).GitService,
+          useValue: {
+            ensureAndCheckoutBranch: jest.fn().mockResolvedValue(false),
+            commitAll: jest.fn().mockResolvedValue(undefined),
+            pushCurrentBranch: jest.fn().mockResolvedValue(false),
+          },
+        },
       ],
     }).compile();
     executor = moduleRef.get(WorkflowExecutorService);

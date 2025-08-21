@@ -1,14 +1,31 @@
 import { Test } from '@nestjs/testing';
 import { StatusCommand } from '../../../src/cli/commands/status.command';
-import { cliTestHelpers } from '../../setup/cli.setup';
 import { FileLoggerService } from '../../../src/core/file-logger.service';
+import { cliTestHelpers } from '../../setup/cli.setup';
 
 describe('StatusCommand', () => {
   let command: StatusCommand;
 
   beforeEach(async () => {
     const moduleRef = await Test.createTestingModule({
-      providers: [StatusCommand, FileLoggerService],
+      providers: [
+        StatusCommand,
+        FileLoggerService,
+        {
+          provide: (await import('../../../src/config/logging-config.service')).LoggingConfigService,
+          useValue: {
+            getConfig: () => ({
+              levels: { debug: true, info: true, warn: true, error: true },
+              storage: { enabled: false, maxFiles: 5, maxFileSize: '10MB', rotation: { enabled: false }, compression: false },
+              display: { color: false, timeFormat: 'ISO' },
+              timeParsing: { enabled: false }
+            }),
+            isLevelEnabled: () => true,
+            isStorageEnabled: () => false,
+            getConfigFilePath: () => 'logging-config.yaml',
+          },
+        },
+      ],
     }).compile();
     command = moduleRef.get(StatusCommand);
   });

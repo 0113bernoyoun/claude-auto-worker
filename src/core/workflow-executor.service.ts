@@ -1,4 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
+import { GitService } from '../git/git.service';
 import { CommandParserService } from '../parser/command.parser.service';
 import { ParsedWorkflow, WorkflowDefinition, WorkflowStage, WorkflowStep } from '../parser/workflow.types';
 import { CommandRunnerService } from './command-runner.service';
@@ -16,7 +17,7 @@ import { LoggerContextService } from './logger-context.service';
 export class WorkflowExecutorService {
   private readonly logger = new Logger(WorkflowExecutorService.name);
 
-  constructor(private readonly state: ExecutionStateService, private readonly ctxLogger: LoggerContextService, private readonly fileLogger: FileLoggerService, private readonly commandRunner: CommandRunnerService, private readonly commandParser: CommandParserService) {}
+  constructor(private readonly state: ExecutionStateService, private readonly ctxLogger: LoggerContextService, private readonly fileLogger: FileLoggerService, private readonly commandRunner: CommandRunnerService, private readonly commandParser: CommandParserService, private readonly gitService: GitService) {}
 
   async execute(parsed: ParsedWorkflow, options?: ExecutorOptions): Promise<void> {
     const workflow = parsed.workflow;
@@ -138,10 +139,24 @@ export class WorkflowExecutorService {
 
     while (attempt < maxAttempts) {
       try {
+        // Git branch preparation if branch is specified on step
+        if (step.branch) {
+          await this.gitService.ensureAndCheckoutBranch(step.branch);
+        }
         if (options?.dryRun) {
           await this.delay(50, options?.signal);
         } else {
           await this.runStep(step, options, { workflow: workflow.name, stage: stageId, step: stepId });
+          // After successful step, auto-commit if branch is specified
+          if (step.branch) {
+            const message = `[${workflow.name}] ${stageId}/${stepId} succeeded`;
+            const commit = await this.gitService.commitAll(message);
+            if (commit) {
+              this.fileLogger.write('info', `Git committed: ${commit}`, { workflow: workflow.name, stage: stageId, step: stepId });
+              // Best-effort push
+              await this.gitService.pushCurrentBranch(true);
+            }
+          }
         }
         this.state.setStepStatus(stageId, stepId, StepExecutionStatus.COMPLETED);
         this.ctxLogger.log('Step completed', { workflow: workflow.name, stage: stageId, step: stepId });
@@ -162,6 +177,8 @@ export class WorkflowExecutorService {
     this.state.setStepStatus(stageId, stepId, StepExecutionStatus.FAILED, message);
     this.ctxLogger.error(`Step failed: ${message}`, { workflow: workflow.name, stage: stageId, step: stepId });
     this.fileLogger.write('error', `Step failed: ${message}`, { workflow: workflow.name, stage: stageId, step: stepId });
+    // Execute rollback steps if configured
+    await this.executeRollbackSteps(workflow, step, options, { workflow: workflow.name, stage: stageId, step: stepId });
     throw lastError instanceof Error ? lastError : new Error(message);
   }
 
@@ -212,6 +229,37 @@ export class WorkflowExecutorService {
 
     // Fallback: small delay
     await this.delay(Math.min(options?.defaultStepTimeoutMs ?? 200, 200), options?.signal);
+  }
+
+  private async executeRollbackSteps(
+    workflow: WorkflowDefinition,
+    failingStep: WorkflowStep,
+    options?: ExecutorOptions,
+    context?: { workflow?: string; stage?: string; step?: string }
+  ): Promise<void> {
+    const rollback = failingStep.policy?.rollback;
+    if (!rollback?.enabled || !Array.isArray(rollback.steps) || rollback.steps.length === 0) return;
+
+    this.fileLogger.write('warn', 'Starting rollback sequence', { workflow: context?.workflow, stage: context?.stage, step: context?.step });
+    for (const rbId of rollback.steps) {
+      const rbStep = workflow.steps.find(s => s.id === rbId);
+      if (!rbStep) {
+        this.fileLogger.write('warn', `Rollback step not found: ${rbId}`, { workflow: context?.workflow, stage: context?.stage, step: context?.step });
+        continue;
+      }
+      try {
+        // Avoid nested rollbacks during rollback execution
+        const sanitizedStep: WorkflowStep = { ...rbStep };
+        if (sanitizedStep.policy) {
+          sanitizedStep.policy = { ...sanitizedStep.policy, rollback: { enabled: false, steps: [] } } as any;
+        }
+        await this.runStep(sanitizedStep, options, context);
+        this.fileLogger.write('info', `Rollback step succeeded: ${rbId}`, { workflow: context?.workflow, stage: context?.stage, step: context?.step });
+      } catch (e) {
+        this.fileLogger.write('warn', `Rollback step failed: ${rbId} - ${(e as Error)?.message || e}`, { workflow: context?.workflow, stage: context?.stage, step: context?.step });
+      }
+    }
+    this.fileLogger.write('warn', 'Rollback sequence finished', { workflow: context?.workflow, stage: context?.stage, step: context?.step });
   }
 
   private delay(ms: number, signal?: AbortSignal): Promise<void> {
