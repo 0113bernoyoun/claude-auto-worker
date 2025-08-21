@@ -11,7 +11,7 @@ export class LogsController {
     @Query('runId') runId?: string,
     @Query('lines', new ParseIntPipe({ optional: true })) lines?: number,
     @Query('level') level?: string,
-  ): Promise<FileLogEntry[]> {
+  ): Promise<{ meta: { count: number; limit: number }; entries: FileLogEntry[] }> {
     const requestedLines = Number.isFinite(lines) ? (lines as number) : 500;
     const maxLines = Math.max(1, Math.min(5000, requestedLines));
 
@@ -27,11 +27,11 @@ export class LogsController {
         })
         .filter(Boolean) as FileLogEntry[];
 
-      if (level) {
-        const target = String(level).toLowerCase();
-        return entries.filter(e => String(e.level).toLowerCase() === target);
-      }
-      return entries;
+      const filtered = level
+        ? entries.filter(e => String(e.level).toLowerCase() === String(level).toLowerCase())
+        : entries;
+
+      return { meta: { count: filtered.length, limit: maxLines }, entries: filtered };
     } catch (e) {
       throw new HttpException('Failed to read logs', HttpStatus.INTERNAL_SERVER_ERROR);
     }

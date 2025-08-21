@@ -12,11 +12,11 @@ export class StatusController {
   ) {}
 
   @Get('status')
-  async getStatus(@Query('runId') runId?: string): Promise<WorkflowStateSnapshot> {
+  async getStatus(@Query('runId') runId?: string): Promise<WorkflowStateSnapshot & { source: 'latest' | 'runId' }> {
     // 1) runId가 주어지면 해당 상태 반환 시도
     if (runId) {
       const existing = await this.stateTracker.getWorkflowState(runId);
-      if (existing) return existing;
+      if (existing) return { ...existing, source: 'runId' } as const;
 
       const logPath = this.fileLogger.getLogFilePath(runId);
       if (!logPath) {
@@ -26,7 +26,7 @@ export class StatusController {
       if (!snapshot) {
         throw new HttpException('Failed to analyze workflow state', HttpStatus.INTERNAL_SERVER_ERROR);
       }
-      return snapshot;
+      return { ...snapshot, source: 'runId' } as const;
     }
 
     // 2) runId가 없으면 최신 로그 기준으로 상태 반환
@@ -41,14 +41,14 @@ export class StatusController {
     }
 
     const existing = await this.stateTracker.getWorkflowState(derivedRunId);
-    if (existing) return existing;
+    if (existing) return { ...existing, source: 'latest' } as const;
 
     const resolvedPath = this.resolveSymlink(latestPath);
     const snapshot = await this.stateTracker.analyzeWorkflowState(derivedRunId, resolvedPath);
     if (!snapshot) {
       throw new HttpException('Failed to analyze workflow state', HttpStatus.INTERNAL_SERVER_ERROR);
     }
-    return snapshot;
+    return { ...snapshot, source: 'latest' } as const;
   }
 
   @Get('states')

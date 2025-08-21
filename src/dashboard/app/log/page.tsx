@@ -8,7 +8,7 @@ type LogEntry = {
   step?: string;
 };
 
-async function getLogs(params: { runId?: string; lines?: number; level?: string } = {}): Promise<LogEntry[]> {
+async function getLogs(params: { runId?: string; lines?: number; level?: string } = {}): Promise<{ meta: { count: number; limit: number }; entries: LogEntry[] }> {
   const apiBase = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:5849/api';
   const query = new URLSearchParams();
   if (params.runId) query.set('runId', params.runId);
@@ -17,10 +17,10 @@ async function getLogs(params: { runId?: string; lines?: number; level?: string 
   const url = `${apiBase}/logs?${query.toString()}`;
   try {
     const res = await fetch(url, { cache: 'no-store' });
-    if (!res.ok) return [];
-    return (await res.json()) as LogEntry[];
+    if (!res.ok) return { meta: { count: 0, limit: params.lines || 0 }, entries: [] };
+    return (await res.json()) as { meta: { count: number; limit: number }; entries: LogEntry[] };
   } catch {
-    return [];
+    return { meta: { count: 0, limit: params.lines || 0 }, entries: [] };
   }
 }
 
@@ -30,7 +30,7 @@ export default async function LogPage({ searchParams }: { searchParams?: { level
   const lines = searchParams?.lines ? Number(searchParams.lines) : 300;
   const refresh = searchParams?.refresh ? Number(searchParams.refresh) : 0; // seconds
 
-  const entries = await getLogs({ lines, level, runId });
+  const { meta, entries } = await getLogs({ lines, level, runId });
   const nextUrl = (delta: Record<string, string | number | undefined>) => {
     const u = new URLSearchParams({
       ...(level ? { level } : {}),
@@ -62,6 +62,9 @@ export default async function LogPage({ searchParams }: { searchParams?: { level
         )}
       </form>
       <div className='mt-3 text-xs font-mono whitespace-pre-wrap'>
+        <div className='mb-2 text-gray-600'>
+          Showing {meta.count} line(s), limit {meta.limit}
+        </div>
         {entries.length === 0 ? (
           <div className='text-gray-500'>No logs available.</div>
         ) : (
