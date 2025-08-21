@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import { spawn } from 'node:child_process';
-import { createServer } from 'node:http';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -37,7 +36,23 @@ async function main() {
   // Ensure dependencies present (lightweight check)
   if (!fs.existsSync(path.join(PROJECT_ROOT, 'node_modules'))) {
     console.log('==> 📦 Installing deps (npm install)');
-    await run('npm', ['install']);
+    try {
+      await run('npm', ['install']);
+    } catch (e) {
+      console.error('⚠️  npm install failed. Retrying with a clean slate...');
+      // Clean slate fallback
+      try {
+        await run('rm', ['-rf', 'node_modules', 'package-lock.json']);
+      } catch {}
+      try {
+        console.log('==> 📦 Installing deps (npm ci)');
+        await run('npm', ['ci']);
+      } catch (e2) {
+        console.error('❌ Dependency installation failed with npm install and npm ci.');
+        console.error('   Try: npm cache clean --force && npm install --legacy-peer-deps');
+        throw e2;
+      }
+    }
   }
 
   console.log('==> 🧱 Build');

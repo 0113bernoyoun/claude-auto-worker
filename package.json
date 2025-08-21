@@ -130,7 +130,7 @@
   },
   "homepage": "https://github.com/your-username/claude-auto-worker#readme",
   "engines": {
-    "node": ">=18.0.0",
+    "node": ">=20.0.0",
     "npm": ">=8.0.0"
   }
 }

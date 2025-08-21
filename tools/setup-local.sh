@@ -47,6 +47,13 @@ npm run build
 echo "==> 🧱 Building CLI (tsc -p tsconfig.cli.json)"
 npm run cli:build
 
+# Optional: port 5849 pre-check (informational)
+if command -v lsof >/dev/null 2>&1; then
+  if lsof -i tcp:5849 >/dev/null 2>&1; then
+    echo "⚠️  Port 5849 is currently in use. If server start fails, free the port or set PORT env."
+  fi
+fi
+
 echo "==> ✅ Setup complete. Helpful next commands:"
 echo "   - npm run start:dev       # Start API server at :5849"
 echo "   - node bin/claude-auto-worker --help"
