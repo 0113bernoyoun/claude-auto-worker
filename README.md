@@ -66,7 +66,7 @@ claude-auto-worker/
 │   ├── cli/               # CLI 모듈 (✅ 완료)
 │   ├── core/              # 핵심 엔진 (✅ Executor MVP 완료)
 │   ├── parser/            # DSL 파서 (✅ 완료)
-│   ├── dashboard/         # 웹 대시보드 (⏳ 개발 중)
+│   ├── dashboard/         # 웹 대시보드 (✅ MVP 스켈레톤 완료)
 │   ├── config/            # 설정 관리 (✅ 완료)
 │   └── shared/            # 공통 모듈 (⏳ 개발 중)
 ├── docs/                  # 문서
@@ -119,11 +119,16 @@ claude-auto-worker enhanced-logs --analysis --state
 npm run start:dev
 ```
 
-### 🌐 API 서버
+### 🌐 API 서버 / 대시보드
 
 - **기본 포트**: 5849
 - **API 엔드포인트**: http://localhost:5849/api
+  - `GET /api/health`: 서버 헬스체크
+  - `GET /api/status`: 최신 실행 상태(메타 `source` 포함)
+  - `GET /api/states`: 실행 상태 목록
+  - `GET /api/logs?runId&level&lines`: 로그 tail(JSONL) + 메타 `{count, limit}`
 - **개발 서버**: http://localhost:5849
+ - **대시보드(Next.js)**: 개발용 `npm run dashboard:start` → http://localhost:5850
 
 ## 📊 개발 진행 상황
 
