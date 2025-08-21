@@ -599,7 +599,7 @@
   - [ ] 프롬프트 전달 유무 옵션화
   - [ ] 세션 관련 오류 처리/가이드
 
-#### TASK-083: CLI logs/status 정비
+#### TASK-083: CLI logs/status 정비 ✅
 - **예상 시간**: 5시간
 - **담당 영역**: CLI/로깅
 - **의존성**: TASK-081
@@ -607,6 +607,11 @@
   - [x] `logs` tail 기본값/필터/lines 개선
   - [x] `status` 상태 추정 정확도 향상(종료 코드/마지막 레벨)
   - [x] 도움말/옵션 표기 일치화
+  - [x] 새로운 enhanced-logs, enhanced-status 명령어 추가
+  - [x] runId 기반 워크플로우 상태 추적 시스템 구현
+  - [x] 진행률 시각화 및 다양한 출력 형식 지원
+- **완료일**: 2025년 1월 21일
+- **PR**: [#24](https://github.com/0113bernoyoun/claude-auto-worker/pull/24)
 
 ### 🟡 보통 우선순위 태스크
 

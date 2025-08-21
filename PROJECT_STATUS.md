@@ -5,7 +5,7 @@
 ### 프로젝트 정보
 - **프로젝트명**: claude-auto-worker
 - **목표**: 차세대 Claude Code 자동화 도구 개발
-- **현재 상태**: 스프린트 2 진행 중 (핵심 엔진 MVP 완료)
+- **현재 상태**: 스프린트 2 진행 중 (핵심 엔진 MVP 완료, CLI 기능 대폭 향상)
 - **MVP 목표**: CLI + 웹 대시보드 기반 자동화 엔진
 - **기술 스택**: NestJS + TypeScript + Next.js
 
@@ -30,7 +30,11 @@
   - ✅ PR #10 머지: 파서 통합 및 CLI 테스트 안정화
   - ✅ PR #13 머지: Workflow Executor MVP (TASK-020) 완료
   - ✅ PR #21 머지: Executor – Claude CLI 액션 매핑/실행 및 로깅 (TASK-081)
-  - ✅ PR #22 머지: CLI logs/status 정비 - runId 기반 상태 추정 고도화 (TASK-083)
+  - ✅ PR #24 머지: CLI logs/status 정비 - runId 기반 상태 추정 고도화 (TASK-083)
+    - 새로운 WorkflowStateTrackerService로 runId 기반 상태 추적 시스템 구현
+    - EnhancedLogParserService로 향상된 로그 파싱 및 분석 기능 추가
+    - enhanced-logs, enhanced-status 명령어로 CLI 기능 대폭 향상
+    - 상태 캐싱, 진행률 시각화, 다양한 출력 형식 지원
 
 ### 핵심 가치 제안
 1. **안전한 자동화**: Git 브랜치 격리, 테스트 자동화, 정책 기반 필터링

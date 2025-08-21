@@ -103,11 +103,17 @@ cp .env.example .env
 # 워크플로우 실행
 claude-auto-worker run workflow.yaml
 
-# 상태 확인
+# 상태 확인 (기본)
 claude-auto-worker status
 
-# 로그 보기
+# 향상된 상태 확인 (상세 정보)
+claude-auto-worker enhanced-status -r <run-id>
+
+# 로그 보기 (기본)
 claude-auto-worker logs --tail
+
+# 향상된 로그 보기 (분석 포함)
+claude-auto-worker enhanced-logs --analysis --state
 
 # 개발 서버 실행 (포트 5849)
 npm run start:dev
@@ -127,9 +133,9 @@ npm run start:dev
 
 ### 📈 전체 현황
 - **총 태스크**: 88개 (10개 스프린트)
-- **완료된 태스크**: 17개 (약 19%)
+- **완료된 태스크**: 20개 (약 23%)
 - **예상 완료**: 20주 (800시간)
-- **현재 스프린트**: 4A/10 (Claude CLI 모드 통합)
+- **현재 스프린트**: 4A/10 (Claude CLI 모드 통합 - CLI 기능 대폭 향상 완료)
 
 ### ✅ 완료된 주요 작업
 
@@ -154,9 +160,12 @@ npm run start:dev
 - Workflow Executor 핵심 구조 설계
 
 #### 🧵 **Claude CLI 통합** (TASK-080 ~ TASK-083)
-- Claude CLI 액션 매핑/실행 및 로깅
-- 세션 이어가기/재개 최소 연동
-- CLI logs/status 정비 (runId 기반 상태 추정 고도화)
+- Claude CLI 액션 매핑/실행 및 로깅 ✅
+- 세션 이어가기/재개 최소 연동 ✅
+- CLI logs/status 정비 (runId 기반 상태 추정 고도화) ✅
+  - 새로운 enhanced-logs, enhanced-status 명령어 추가
+  - 워크플로우 상태 추적 시스템 구현
+  - 진행률 시각화 및 다양한 출력 형식 지원
 
 ### 🔄 현재 진행 중인 작업
 - **스프린트 4A**: Claude CLI 모드 통합 및 로깅 시스템 최적화
