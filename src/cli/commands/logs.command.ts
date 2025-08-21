@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import { Command, CommandRunner, Option } from 'nest-commander';
 import * as path from 'path';
@@ -13,6 +13,10 @@ import { FileLogEntry, FileLoggerService } from '../../core/file-logger.service'
   arguments: '[run-id]'
 })
 export class LogsCommand extends CommandRunner {
+  private static readonly BUFFER_SIZE = 8192; // 8KB
+  private static readonly LARGE_FILE_THRESHOLD = 10 * 1024 * 1024; // 10MB
+  
+  private readonly logger = new Logger(LogsCommand.name);
   private invalidJsonCount: number = 0;
   private totalLinesProcessed: number = 0;
 
@@ -129,7 +133,7 @@ export class LogsCommand extends CommandRunner {
       const config = this.loggingConfig.getConfig();
       
       // 파일이 너무 큰 경우 최적화된 역탐색 사용
-      if (fileSize > 10 * 1024 * 1024) { // 10MB 이상
+      if (fileSize > LogsCommand.LARGE_FILE_THRESHOLD) {
         return this.getLastLinesFromLargeFile(filePath, numLines);
       }
       
@@ -153,13 +157,12 @@ export class LogsCommand extends CommandRunner {
   private getLastLinesFromLargeFile(filePath: string, numLines: number): string[] {
     try {
       const lines: string[] = [];
-      const bufferSize = 8192; // 8KB 버퍼
       const stats = fs.statSync(filePath);
       let position = stats.size;
       let remainingLines = numLines;
 
       while (remainingLines > 0 && position > 0) {
-        const chunkSize = Math.min(bufferSize, position);
+        const chunkSize = Math.min(LogsCommand.BUFFER_SIZE, position);
         const start = Math.max(0, position - chunkSize);
         
         const buffer = Buffer.alloc(chunkSize);
@@ -213,7 +216,7 @@ export class LogsCommand extends CommandRunner {
     } catch (error) {
       this.invalidJsonCount++;
       if (showInvalidJson) {
-        console.warn(`⚠️  Invalid JSON at line ${this.totalLinesProcessed + 1}: ${line.substring(0, 100)}...`);
+        this.logger.warn(`⚠️  Invalid JSON at line ${this.totalLinesProcessed + 1}: ${line.substring(0, 100)}...`);
       }
       return null;
     }

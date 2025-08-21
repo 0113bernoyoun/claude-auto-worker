@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as zlib from 'zlib';
@@ -19,6 +19,7 @@ export interface FileLogEntry {
 
 @Injectable()
 export class FileLoggerService {
+  private readonly logger = new Logger(FileLoggerService.name);
   private logsDir: string;
   private currentRunId?: string;
   private currentLogPath?: string;
@@ -146,7 +147,7 @@ export class FileLoggerService {
       fs.closeSync(fs.openSync(filePath, 'a'));
       this.currentFileSize = 0;
     } catch (error) {
-      console.warn('Failed to rotate log file:', error);
+      this.logger.warn('Failed to rotate log file:', error);
     }
   }
 
@@ -165,10 +166,10 @@ export class FileLoggerService {
       });
 
       output.on('error', (error) => {
-        console.warn('Failed to compress log file:', error);
+        this.logger.warn('Failed to compress log file:', error);
       });
     } catch (error) {
-      console.warn('Failed to compress log file:', error);
+      this.logger.warn('Failed to compress log file:', error);
     }
   }
 
@@ -193,12 +194,12 @@ export class FileLoggerService {
           try {
             fs.unlinkSync(file.path);
           } catch (error) {
-            console.warn(`Failed to delete old log file ${file.name}:`, error);
+            this.logger.warn(`Failed to delete old log file ${file.name}:`, error);
           }
         }
       }
     } catch (error) {
-      console.warn('Failed to cleanup old logs:', error);
+      this.logger.warn('Failed to cleanup old logs:', error);
     }
   }
 

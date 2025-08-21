@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import * as path from 'path';
@@ -6,15 +6,16 @@ import { DEFAULT_LOGGING_CONFIG, LoggingConfig } from './logging-config.interfac
 
 @Injectable()
 export class LoggingConfigService {
+  private readonly logger = new Logger(LoggingConfigService.name);
   private config: LoggingConfig;
   private configPath: string;
 
   constructor() {
-    this.configPath = this.getConfigFilePath();
+    this.configPath = this.getConfigPath();
     this.config = this.loadConfig();
   }
 
-  private getConfigFilePath(): string {
+  private getConfigPath(): string {
     const base = process.env.LOG_CONFIG_DIR || process.cwd();
     return path.join(base, 'logging-config.yaml');
   }
@@ -27,7 +28,7 @@ export class LoggingConfigService {
         return this.mergeConfig(DEFAULT_LOGGING_CONFIG, loadedConfig);
       }
     } catch (error) {
-      console.warn(`Failed to load logging config from ${this.configPath}:`, error);
+      this.logger.warn(`Failed to load logging config from ${this.configPath}:`, error);
     }
     
     // 기본 설정으로 초기화하고 저장
@@ -77,7 +78,7 @@ export class LoggingConfigService {
       
       fs.writeFileSync(this.configPath, yamlContent, 'utf-8');
     } catch (error) {
-      console.warn('Failed to save logging config:', error);
+      this.logger.warn('Failed to save logging config:', error);
     }
   }
 
@@ -102,7 +103,7 @@ export class LoggingConfigService {
   }
 
   // 설정 파일 경로 반환
-  getConfigPath(): string {
+  getConfigFilePath(): string {
     return this.configPath;
   }
 }
