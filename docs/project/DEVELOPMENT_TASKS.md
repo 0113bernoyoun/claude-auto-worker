@@ -130,7 +130,7 @@
 - (선택) TASK-023: Usage Limit 감지/백오프
  - TASK-080: DSL 확장(Claude CLI 액션 스키마/검증)
  - TASK-081: Executor에 Claude CLI 액션 매핑/실행(파일 로그 연동)
- - TASK-090: GitHub 통합 모드 옵션화/폴백(gh CLI → token → manual)
+ - [x] TASK-090: GitHub 통합 모드 옵션화/폴백(gh CLI → token → manual)
 
 ### Next (단기)
 - TASK-027: 대시보드 실행 현황/진행률/ETA
@@ -564,6 +564,8 @@
   - [ ] 모드 자동 감지 및 3단계 폴백: gh CLI(로그인) → 토큰(`GITHUB_TOKEN`) → manual(compare URL)
   - [ ] 최소 단위 테스트: 모드 감지, `enabled=false` 시 강제 manual 반환
   - [ ] 문서(README/설정 템플릿) 안내 초안
+ - **완료일**: 2025년 8월 21일
+ - **PR**: [#27](https://github.com/0113bernoyoun/claude-auto-worker/pull/27)
 
 ---
 
