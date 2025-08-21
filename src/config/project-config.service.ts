@@ -19,6 +19,10 @@ export interface ProjectConfig {
   dashboard?: {
     enabled?: boolean;
   };
+  github?: {
+    enabled?: boolean; // 전체 GitHub 통합 사용 여부
+    mode?: 'auto' | 'cli' | 'token' | 'manual'; // 선택 모드
+  };
   environments?: Record<string, Partial<ProjectConfig>>;
 }
 
@@ -36,6 +40,10 @@ function createDefaultConfig(): ProjectConfig {
     dashboard: {
       enabled: true,
     },
+    github: {
+      enabled: process.env.USE_GITHUB ? /^(1|true|yes)$/i.test(process.env.USE_GITHUB) : true,
+      mode: (process.env.GITHUB_MODE as any) || 'auto',
+    },
   };
 }
 
@@ -51,6 +59,10 @@ const schema = Joi.object<ProjectConfig>({
   }).default(),
   dashboard: Joi.object({
     enabled: Joi.boolean().default(true),
+  }).default(),
+  github: Joi.object({
+    enabled: Joi.boolean().default(true),
+    mode: Joi.string().valid('auto', 'cli', 'token', 'manual').default('auto'),
   }).default(),
   environments: Joi.object()
     .pattern(/^[a-zA-Z0-9_-]+$/, Joi.object({}).unknown(true))
