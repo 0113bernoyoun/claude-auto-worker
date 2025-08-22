@@ -1263,7 +1263,11 @@
 - **완료 기준**:
   - [ ] 프로젝트 루트에 `.watchmanconfig` 무시 경로 반영(기본 제외 목록 포함)
   - [ ] 운영 가이드 초안 작성(대규모 `npm ci`/빌드 시 팁, 슬립 방지, 디스크 여유)
+  - [ ] 운영 가이드에 watchman 재시작/재등록 커맨드 명시
+        - `watchman shutdown-server`
+        - `watchman watch-del <repo>; watchman watch-project <repo>`
   - [ ] 관련 README/문서 링크는 PR 머지 후 반영
+  - [ ] 후속 PR로 “`.watchmanconfig` 템플릿 파일” 추가(이 PR은 문구만 포함)
 
 ### 📦 안정성/메모리 가드 그룹핑 제안
 
