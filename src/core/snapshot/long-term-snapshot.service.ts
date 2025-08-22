@@ -38,6 +38,10 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
     this.logger.log('Long-term snapshot service stopped');
   }
 
+  /**
+   * 스냅샷 저장소 디렉토리 초기화
+   * @throws 스토리지 초기화 실패 시 에러
+   */
   private async initializeStorage(): Promise<void> {
     try {
       const storagePath = this.snapshotConfig.getStoragePath();
@@ -45,8 +49,8 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
       this.logger.log(`Storage directory initialized: ${storagePath}`);
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to initialize storage directory: ${errorMessage}`);
-      throw error;
+      this.logger.error(`Storage directory initialization failed: ${errorMessage}`);
+      throw new Error(`Failed to initialize storage directory: ${errorMessage}`);
     }
   }
 
@@ -79,25 +83,55 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * 개선된 cron-like 스케줄 파서
+   * 형식: "분 시 일 월 요일" (예: "0 2 * * *" -> 매일 오전 2시)
+   */
   private parseSchedule(schedule: string): Date {
-    // 간단한 cron-like 파서 (분 시 일 월 요일)
-    // 예: "0 2 * * *" -> 매일 오전 2시
-    const parts = schedule.split(' ');
+    const parts = schedule.trim().split(/\s+/);
+    
     if (parts.length !== 5) {
-      throw new Error(`Invalid schedule format: ${schedule}`);
+      throw new Error(`Invalid schedule format: expected 5 parts, got ${parts.length}. Format: "분 시 일 월 요일"`);
     }
 
-    const [minute, hour, day, month, weekday] = parts;
+    const [minuteStr, hourStr, dayStr, monthStr, weekdayStr] = parts;
+    
+    // 각 부분의 유효성 검사 및 파싱
+    const minute = this.parseCronPart(minuteStr!, 0, 59, 'minute');
+    const hour = this.parseCronPart(hourStr!, 0, 23, 'hour');
+    
+    // 현재 시간 기준으로 다음 실행 시간 계산
     const now = new Date();
     const next = new Date(now);
-
-    // 기본적으로 다음날 같은 시간으로 설정
-    const hourNum = hour ? parseInt(hour, 10) : 0;
-    const minuteNum = minute ? parseInt(minute, 10) : 0;
-    next.setDate(next.getDate() + 1);
-    next.setHours(hourNum, minuteNum, 0, 0);
-
+    
+    // 다음 실행 시간 설정
+    next.setMinutes(minute, 0, 0);
+    next.setHours(hour);
+    
+    // 이미 지난 시간이면 다음날로 설정
+    if (next <= now) {
+      next.setDate(next.getDate() + 1);
+    }
+    
     return next;
+  }
+
+  /**
+   * cron 표현식의 각 부분을 파싱하고 유효성 검사
+   */
+  private parseCronPart(part: string, min: number, max: number, fieldName: string): number {
+    // "*"는 기본값 사용
+    if (part === '*') {
+      return fieldName === 'minute' ? 0 : (fieldName === 'hour' ? 2 : 1);
+    }
+    
+    // 숫자 파싱
+    const num = parseInt(part, 10);
+    if (isNaN(num) || num < min || num > max) {
+      throw new Error(`Invalid ${fieldName} value: ${part}. Must be between ${min} and ${max}`);
+    }
+    
+    return num;
   }
 
   @Cron(CronExpression.EVERY_DAY_AT_2AM)
@@ -162,34 +196,46 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * 활성화된 데이터 타입별로 스냅샷 데이터 수집
+   * @returns 수집된 데이터 객체 (데이터 타입별로 분류)
+   */
   private async collectSnapshotData(): Promise<Record<string, unknown[]>> {
-    const data: Record<string, unknown[]> = {};
-    const enabledTypes = this.snapshotConfig.getEnabledDataTypes();
+    const collectedData: Record<string, unknown[]> = {};
+    const enabledDataTypes = this.snapshotConfig.getEnabledDataTypes();
 
-    for (const dataType of enabledTypes) {
+    for (const dataType of enabledDataTypes) {
       try {
         switch (dataType.type) {
           case 'policy_audit':
-            data.policy_audit = await this.collectPolicyAuditData();
+            collectedData.policy_audit = await this.collectPolicyAuditData();
             break;
           case 'workflow_history':
-            data.workflow_history = await this.collectWorkflowHistoryData();
+            collectedData.workflow_history = await this.collectWorkflowHistoryData();
             break;
           case 'system_metrics':
-            data.system_metrics = await this.collectSystemMetricsData();
+            collectedData.system_metrics = await this.collectSystemMetricsData();
             break;
           case 'user_activity':
-            data.user_activity = await this.collectUserActivityData();
+            collectedData.user_activity = await this.collectUserActivityData();
             break;
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : String(error);
-        this.logger.warn(`Failed to collect ${dataType.type} data: ${errorMessage}`);
-        data[dataType.type] = [];
+        // 에러 발생 시 빈 배열로 설정하고 계속 진행
+        collectedData[dataType.type] = [];
       }
     }
 
-    return data;
+    return collectedData;
+  }
+
+  /**
+   * 공통 에러 처리 헬퍼 메서드
+   */
+  private handleDataCollectionError(error: unknown, dataType: string): unknown[] {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    this.logger.warn(`Failed to collect ${dataType} data: ${errorMessage}`);
+    return [];
   }
 
   private async collectPolicyAuditData(): Promise<unknown[]> {
@@ -198,9 +244,7 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
       // 실제 구현에서는 PolicyEngineService에서 감사 로그를 가져와야 함
       return [];
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Failed to collect policy audit data: ${errorMessage}`);
-      return [];
+      return this.handleDataCollectionError(error, 'policy audit');
     }
   }
 
@@ -210,9 +254,7 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
       // 실제 구현에서는 ExecutionStateService에서 워크플로우 이력을 가져와야 함
       return [];
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Failed to collect workflow history data: ${errorMessage}`);
-      return [];
+      return this.handleDataCollectionError(error, 'workflow history');
     }
   }
 
@@ -229,9 +271,7 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
       };
       return [metrics];
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      this.logger.warn(`Failed to collect system metrics: ${errorMessage}`);
-      return [];
+      return this.handleDataCollectionError(error, 'system metrics');
     }
   }
 
@@ -260,8 +300,7 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
       
       // 압축이 활성화된 경우
       if (this.snapshotConfig.isCompressionEnabled()) {
-        // 간단한 압축 (실제로는 zlib 등을 사용할 수 있음)
-        content = content.replace(/\s+/g, ' ').trim();
+        content = this.compressContent(content);
       }
 
       await fs.writeFile(filepath, content, 'utf8');
@@ -279,10 +318,26 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
+  /**
+   * SQLite 저장소 구현
+   * 향후 확장을 위한 구조 설계
+   */
   private async saveToSqlite(snapshotData: SnapshotData): Promise<void> {
-    // SQLite 저장 구현 (현재는 파일 저장으로 대체)
-    this.logger.warn('SQLite storage not yet implemented, falling back to file storage');
-    await this.saveToFile(snapshotData);
+    try {
+      // TODO: SQLite 구현 시 고려사항
+      // 1. 데이터베이스 스키마 설계
+      // 2. 인덱싱 전략 (timestamp, dataType 등)
+      // 3. 트랜잭션 처리
+      // 4. 데이터 압축 및 압축 해제
+      // 5. 백업 및 복구 전략
+      
+      this.logger.warn('SQLite storage not yet implemented, falling back to file storage');
+      await this.saveToFile(snapshotData);
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      this.logger.error(`SQLite storage failed, falling back to file storage: ${errorMessage}`);
+      await this.saveToFile(snapshotData);
+    }
   }
 
   private async cleanupOldSnapshots(): Promise<void> {
@@ -409,6 +464,16 @@ export class LongTermSnapshotService implements OnModuleInit, OnModuleDestroy {
 
   private calculateChecksum(content: string): string {
     return crypto.createHash('sha256').update(content).digest('hex');
+  }
+
+  /**
+   * 콘텐츠 압축 처리
+   * 향후 zlib 등을 사용한 실제 압축으로 확장 가능
+   */
+  private compressContent(content: string): string {
+    // 현재는 공백 정리만 수행
+    // TODO: zlib 압축 옵션 추가 고려
+    return content.replace(/\s+/g, ' ').trim();
   }
 
   // 수동 스냅샷 생성 (테스트용)

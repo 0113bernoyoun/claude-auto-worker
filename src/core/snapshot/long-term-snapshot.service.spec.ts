@@ -212,12 +212,46 @@ describe('LongTermSnapshotService', () => {
       expect(nextRun.getMinutes()).toBe(0);
     });
 
+    it('should parse schedule with wildcards', () => {
+      const schedule = '* * * * *';
+      const nextRun = (service as any).parseSchedule(schedule);
+      
+      expect(nextRun).toBeInstanceOf(Date);
+      expect(nextRun.getHours()).toBe(2); // 기본값
+      expect(nextRun.getMinutes()).toBe(0); // 기본값
+    });
+
     it('should throw error for invalid schedule format', () => {
       const invalidSchedule = 'invalid';
       
       expect(() => {
         (service as any).parseSchedule(invalidSchedule);
-      }).toThrow('Invalid schedule format: invalid');
+      }).toThrow('Invalid schedule format: expected 5 parts, got 1. Format: "분 시 일 월 요일"');
+    });
+
+    it('should throw error for invalid minute value', () => {
+      const invalidSchedule = '60 2 * * *';
+      
+      expect(() => {
+        (service as any).parseSchedule(invalidSchedule);
+      }).toThrow('Invalid minute value: 60. Must be between 0 and 59');
+    });
+
+    it('should throw error for invalid hour value', () => {
+      const invalidSchedule = '0 25 * * *';
+      
+      expect(() => {
+        (service as any).parseSchedule(invalidSchedule);
+      }).toThrow('Invalid hour value: 25. Must be between 0 and 23');
+    });
+
+    it('should handle whitespace in schedule', () => {
+      const schedule = '  0  2  *  *  *  ';
+      const nextRun = (service as any).parseSchedule(schedule);
+      
+      expect(nextRun).toBeInstanceOf(Date);
+      expect(nextRun.getHours()).toBe(2);
+      expect(nextRun.getMinutes()).toBe(0);
     });
   });
 
@@ -229,6 +263,29 @@ describe('LongTermSnapshotService', () => {
       expect(checksum).toBeDefined();
       expect(checksum).toHaveLength(64); // SHA256 hex length
       expect(typeof checksum).toBe('string');
+    });
+  });
+
+  describe('compressContent', () => {
+    it('should compress content by removing extra whitespace', () => {
+      const content = '  test    content  with   extra   spaces  ';
+      const compressed = (service as any).compressContent(content);
+      
+      expect(compressed).toBe('test content with extra spaces');
+    });
+
+    it('should handle content without extra whitespace', () => {
+      const content = 'test content';
+      const compressed = (service as any).compressContent(content);
+      
+      expect(compressed).toBe('test content');
+    });
+
+    it('should handle empty content', () => {
+      const content = '';
+      const compressed = (service as any).compressContent(content);
+      
+      expect(compressed).toBe('');
     });
   });
 
