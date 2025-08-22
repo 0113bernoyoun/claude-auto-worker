@@ -4,6 +4,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { CoreModule } from './core/core.module';
 import { MonitoringModule } from './monitoring/monitoring.module';
+import { PolicyModule } from './policy/policy.module';
 
 @Module({
   imports: [
@@ -13,6 +14,7 @@ import { MonitoringModule } from './monitoring/monitoring.module';
     }),
     CoreModule,
     MonitoringModule,
+    PolicyModule,
   ],
   controllers: [AppController],
   providers: [AppService],
