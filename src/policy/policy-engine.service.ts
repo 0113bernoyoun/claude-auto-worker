@@ -15,8 +15,48 @@ export class PolicyEngineService {
   private policies: Map<string, SecurityPolicy> = new Map();
   private ruleEvaluators: Map<string, RuleEvaluator> = new Map();
 
+  // Cached configuration/constants (can be overridden via env)
+  private readonly SENSITIVE_PATTERNS: RegExp[] = [
+    // Matches apiKey/password/secret/token/privateKey with quoted or unquoted values
+    /(api[_-]?key)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
+    /(password)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
+    /(secret)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
+    /(token)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
+    /(private[_-]?key)\s*[:=]\s*(["']?)([^"'\s]+)\2/i
+  ];
+
+  private readonly DANGEROUS_COMMANDS: string[] = (process.env.POLICY_DANGEROUS_COMMANDS?.split(',')
+    .map(s => s.trim())
+    .filter(Boolean)) || [
+    'rm -rf /',
+    'format c:',
+    'del /s /q c:\\',
+    'sudo',
+    'chmod 777',
+    'chown root',
+    'dd if=/dev/zero',
+    'mkfs',
+    'fdisk'
+  ];
+
+  private readonly RESTRICTED_PATHS: string[] = (process.env.POLICY_RESTRICTED_PATHS?.split(',')
+    .map(s => s.trim())
+    .filter(Boolean)) || [
+    '/etc/',
+    '/var/log/',
+    '/root/',
+    'C:\\Windows\\',
+    'C:\\System32\\'
+  ];
+
   constructor() {
     this.initializeDefaultRules();
+  }
+
+  private debug(message: string) {
+    if (process.env.POLICY_DEBUG === '1' || process.env.POLICY_DEBUG === 'true') {
+      this.logger.debug(message);
+    }
   }
 
   /**
@@ -50,30 +90,30 @@ export class PolicyEngineService {
     const warnings: PolicyViolation[] = [];
     const recommendations: string[] = [];
 
-    this.logger.debug(`Validating workflow execution with ${this.policies.size} policies`);
-    this.logger.debug(`Command: ${command}, FilePath: ${filePath}`);
+    this.debug(`Validating workflow execution with ${this.policies.size} policies`);
+    this.debug(`Command: ${command}, FilePath: ${filePath}`);
 
     // 활성화된 정책들에 대해 검증 수행
     for (const policy of this.policies.values()) {
       if (!policy.enabled) {
-        this.logger.debug(`Policy ${policy.id} is disabled, skipping...`);
+        this.debug(`Policy ${policy.id} is disabled, skipping...`);
         continue;
       }
 
-      this.logger.debug(`Processing policy: ${policy.id} with ${policy.rules.length} rules`);
+      this.debug(`Processing policy: ${policy.id} with ${policy.rules.length} rules`);
 
       for (const rule of policy.rules) {
         if (!rule.enabled) {
-          this.logger.debug(`Rule ${rule.id} is disabled, skipping...`);
+          this.debug(`Rule ${rule.id} is disabled, skipping...`);
           continue;
         }
 
-        this.logger.debug(`Evaluating rule: ${rule.id} (${rule.type})`);
+        this.debug(`Evaluating rule: ${rule.id} (${rule.type})`);
 
         try {
           const ruleViolations = await this.evaluateRule(rule, context, command, filePath);
           
-          this.logger.debug(`Rule ${rule.id} returned ${ruleViolations.length} violations`);
+          this.debug(`Rule ${rule.id} returned ${ruleViolations.length} violations`);
           
           // 위반 사항을 심각도에 따라 분류
           for (const violation of ruleViolations) {
@@ -100,7 +140,7 @@ export class PolicyEngineService {
       }
     }
 
-    this.logger.debug(`Validation complete: ${violations.length} violations, ${warnings.length} warnings`);
+    this.debug(`Validation complete: ${violations.length} violations, ${warnings.length} warnings`);
 
     // 권장사항 생성
     if (violations.length > 0) {
@@ -136,20 +176,20 @@ export class PolicyEngineService {
       return violations;
     }
 
-    this.logger.debug(`Rule ${rule.id} (${rule.type}) conditions met, evaluating...`);
+    this.debug(`Rule ${rule.id} (${rule.type}) conditions met, evaluating...`);
 
     const evaluator = this.ruleEvaluators.get(rule.type);
     let hasSpecialEvaluator = false;
     
-    this.logger.debug(`Looking for evaluator for rule type: ${rule.type}`);
-    this.logger.debug(`Available evaluators: ${Array.from(this.ruleEvaluators.keys()).join(', ')}`);
+    this.debug(`Looking for evaluator for rule type: ${rule.type}`);
+    this.debug(`Available evaluators: ${Array.from(this.ruleEvaluators.keys()).join(', ')}`);
     
     if (evaluator && rule.type !== 'custom') {
       hasSpecialEvaluator = true;
-      this.logger.debug(`Using special evaluator for rule type: ${rule.type}`);
+      this.debug(`Using special evaluator for rule type: ${rule.type}`);
       try {
         const evaluatorViolations = await evaluator.evaluate(rule, context, command, filePath);
-        this.logger.debug(`Evaluator returned ${evaluatorViolations.length} violations`);
+        this.debug(`Evaluator returned ${evaluatorViolations.length} violations`);
         violations.push(...evaluatorViolations);
       } catch (error) {
         this.logger.error(`Error in rule evaluator: ${error}`);
@@ -166,12 +206,12 @@ export class PolicyEngineService {
         });
       }
     } else {
-      this.logger.debug(`No special evaluator for rule type: ${rule.type}`);
+      this.debug(`No special evaluator for rule type: ${rule.type}`);
     }
 
     // custom 타입이거나 특별한 평가자가 없는 경우 액션 실행
     if (rule.type === 'custom' || !hasSpecialEvaluator) {
-      this.logger.debug(`Executing actions for rule type: ${rule.type}`);
+      this.debug(`Executing actions for rule type: ${rule.type}`);
       if (rule.actions.length > 0) {
         for (const action of rule.actions) {
           const violation = await this.executeAction(action, rule, context);
@@ -196,7 +236,7 @@ export class PolicyEngineService {
       });
     }
 
-    this.logger.debug(`Rule ${rule.id} evaluation complete, total violations: ${violations.length}`);
+    this.debug(`Rule ${rule.id} evaluation complete, total violations: ${violations.length}`);
     return violations;
   }
 
@@ -460,17 +500,7 @@ export class PolicyEngineService {
     
     if (!command) return Promise.resolve(violations);
 
-    const dangerousCommands = [
-      'rm -rf /',
-      'format c:',
-      'del /s /q c:\\',
-      'sudo',
-      'chmod 777',
-      'chown root',
-      'dd if=/dev/zero',
-      'mkfs',
-      'fdisk'
-    ];
+    const dangerousCommands = this.DANGEROUS_COMMANDS;
 
     for (const dangerousCmd of dangerousCommands) {
       if (command.toLowerCase().includes(dangerousCmd.toLowerCase())) {
@@ -508,20 +538,14 @@ export class PolicyEngineService {
       return Promise.resolve(violations);
     }
 
-    const restrictedPaths = [
-      '/etc/',
-      '/var/log/',
-      '/root/',
-      'C:\\Windows\\',
-      'C:\\System32\\'
-    ];
+    const restrictedPaths = this.RESTRICTED_PATHS;
 
-    this.logger.debug(`Checking against restricted paths: ${restrictedPaths.join(', ')}`);
+    this.debug(`Checking against restricted paths: ${restrictedPaths.join(', ')}`);
 
     for (const restrictedPath of restrictedPaths) {
-      this.logger.debug(`Checking if '${filePath}' contains '${restrictedPath}'`);
+      this.debug(`Checking if '${filePath}' contains '${restrictedPath}'`);
       if (filePath.includes(restrictedPath)) {
-        this.logger.debug(`MATCH FOUND! '${filePath}' contains '${restrictedPath}'`);
+        this.debug(`MATCH FOUND! '${filePath}' contains '${restrictedPath}'`);
         violations.push({
           id: `path-violation-${Date.now()}`,
           policyId: context.workflowId || 'unknown',
@@ -533,11 +557,11 @@ export class PolicyEngineService {
           resolved: false
         });
       } else {
-        this.logger.debug(`No match for '${restrictedPath}'`);
+        this.debug(`No match for '${restrictedPath}'`);
       }
     }
 
-    this.logger.debug(`evaluatePathRestriction returning ${violations.length} violations`);
+    this.debug(`evaluatePathRestriction returning ${violations.length} violations`);
     return Promise.resolve(violations);
   }
 
@@ -559,21 +583,14 @@ export class PolicyEngineService {
       return Promise.resolve(violations);
     }
 
-    // 인용부호 유무와 공백을 모두 허용하는 패턴들 (대소문자 무시)
-    const sensitivePatterns = [
-      /(api[_-]?key)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
-      /(password)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
-      /(secret)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
-      /(token)\s*[:=]\s*(["']?)([^"'\s]+)\2/i,
-      /(private[_-]?key)\s*[:=]\s*(["']?)([^"'\s]+)\2/i
-    ];
-
-    this.logger.debug(`Checking command against ${sensitivePatterns.length} sensitive patterns`);
+    // Use cached patterns
+    const sensitivePatterns = this.SENSITIVE_PATTERNS;
+    this.debug(`Checking command against ${sensitivePatterns.length} sensitive patterns`);
 
     for (const pattern of sensitivePatterns) {
-      this.logger.debug(`Testing pattern: ${pattern}`);
+      this.debug(`Testing pattern: ${pattern}`);
       if (pattern.test(command)) {
-        this.logger.debug(`MATCH FOUND! Command matches pattern: ${pattern}`);
+        this.debug(`MATCH FOUND! Command matches pattern: ${pattern}`);
         violations.push({
           id: `sensitive-violation-${Date.now()}`,
           policyId: context.workflowId || 'unknown',

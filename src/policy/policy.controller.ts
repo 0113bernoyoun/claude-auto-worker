@@ -3,11 +3,17 @@ import {
     Controller,
     Delete,
     Get,
+    Headers,
+    HttpException,
+    HttpStatus,
     Logger,
     Param,
     Post,
     Put,
-    Query
+    Query,
+    UseGuards,
+    UsePipes,
+    ValidationPipe
 } from '@nestjs/common';
 import { PolicyEngineService } from './policy-engine.service';
 import { PolicyManagementService } from './policy-management.service';
@@ -34,6 +40,7 @@ export class PolicyController {
    * 워크플로우 실행을 검증합니다.
    */
   @Post('validate')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async validateWorkflowExecution(
     @Body() body: {
       context: PolicyContext;
@@ -101,7 +108,13 @@ export class PolicyController {
    * 새로운 보안 정책을 생성합니다.
    */
   @Post('policies')
+  @UseGuards({ canActivate: (_c: any) => {
+    const token = process.env.ADMIN_TOKEN;
+    return !!token; // presence required; actual check in handler
+  }} as any)
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async createPolicy(
+    @Headers('x-admin-token') adminHeader: string,
     @Body() body: {
       name: string;
       description: string;
@@ -110,6 +123,9 @@ export class PolicyController {
       createdBy: string;
     }
   ) {
+    if (process.env.ADMIN_TOKEN && adminHeader !== process.env.ADMIN_TOKEN) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
     const { name, description, priority, rules, createdBy } = body;
     
     this.logger.log(`Creating policy: ${name} by ${createdBy}`);
@@ -130,11 +146,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to create policy: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to create policy: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -144,6 +161,7 @@ export class PolicyController {
    * 기존 정책을 업데이트합니다.
    */
   @Put('policies/:id')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async updatePolicy(
     @Param('id') id: string,
     @Body() body: {
@@ -169,11 +187,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to update policy: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to update policy: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -183,10 +202,15 @@ export class PolicyController {
    * 정책을 삭제합니다.
    */
   @Delete('policies/:id')
+  @UseGuards({ canActivate: () => !!process.env.ADMIN_TOKEN } as any)
   async deletePolicy(
     @Param('id') id: string,
+    @Headers('x-admin-token') adminHeader: string,
     @Body() body: { deletedBy: string }
   ) {
+    if (process.env.ADMIN_TOKEN && adminHeader !== process.env.ADMIN_TOKEN) {
+      throw new HttpException('Unauthorized', HttpStatus.UNAUTHORIZED);
+    }
     const { deletedBy } = body;
     
     this.logger.log(`Deleting policy: ${id} by ${deletedBy}`);
@@ -208,11 +232,12 @@ export class PolicyController {
         };
       }
     } catch (error) {
-      this.logger.error(`Failed to delete policy: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to delete policy: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -222,6 +247,7 @@ export class PolicyController {
    * 정책을 활성화/비활성화합니다.
    */
   @Put('policies/:id/toggle')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async togglePolicy(
     @Param('id') id: string,
     @Body() body: { enabled: boolean; updatedBy: string }
@@ -244,11 +270,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to toggle policy: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to toggle policy: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -258,6 +285,7 @@ export class PolicyController {
    * 정책을 테스트합니다.
    */
   @Post('policies/:id/test')
+  @UsePipes(new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }))
   async testPolicy(
     @Param('id') id: string,
     @Body() body: {
@@ -284,11 +312,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to test policy: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to test policy: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -360,11 +389,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to request approval: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to request approval: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -396,11 +426,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to approve request: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to approve request: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }
@@ -432,11 +463,12 @@ export class PolicyController {
         timestamp: new Date().toISOString()
       };
     } catch (error) {
-      this.logger.error(`Failed to reject request: ${error.message}`);
+      const msg = error instanceof Error ? error.message : 'Unknown error';
+      this.logger.error(`Failed to reject request: ${msg}`);
       
       return {
         success: false,
-        error: error.message,
+        error: msg,
         timestamp: new Date().toISOString()
       };
     }

@@ -20,14 +20,17 @@ export interface SecurityRule {
   metadata?: Record<string, unknown>;
 }
 
-export type RuleType = 
-  | 'command_filter'
-  | 'path_restriction'
-  | 'file_size_limit'
-  | 'sensitive_data'
-  | 'execution_time'
-  | 'resource_usage'
-  | 'custom';
+export enum RuleTypeEnum {
+  CommandFilter = 'command_filter',
+  PathRestriction = 'path_restriction',
+  FileSizeLimit = 'file_size_limit',
+  SensitiveData = 'sensitive_data',
+  ExecutionTime = 'execution_time',
+  ResourceUsage = 'resource_usage',
+  Custom = 'custom',
+}
+
+export type RuleType = `${RuleTypeEnum}`;
 
 export interface RuleCondition {
   field: string;
@@ -70,6 +73,8 @@ export interface PolicyValidationResult {
   violations: PolicyViolation[];
   warnings: PolicyViolation[];
   recommendations: string[];
+  summaryCode?: string; // optional short code for UI usage (e.g., 'OK', 'WARN', 'BLOCK')
+  category?: string; // optional category for dashboard grouping
 }
 
 export interface PolicyApproval {
