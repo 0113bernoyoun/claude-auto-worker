@@ -20,6 +20,7 @@ steps:
   - id: "content-analysis"
     name: "내용 분석"
     type: "claude"
+    action: "analyze"
     prompt: |
       다음 파일 내용을 분석해주세요:
       
@@ -41,6 +42,7 @@ steps:
   - id: "content-transformation"
     name: "내용 변환"
     type: "claude"
+    action: "transform"
     prompt: |
       이전 분석 결과를 바탕으로, 파일 내용을 ${output_format} 형식으로 변환해주세요.
       
@@ -65,6 +67,7 @@ steps:
   - id: "quality-check"
     name: "품질 검사"
     type: "claude"
+    action: "review"
     prompt: |
       변환된 결과의 품질을 검사하고 개선 제안을 해주세요.
       
