@@ -107,46 +107,56 @@ describe('PolicyCacheService', () => {
   });
 
   describe('캐시 통계', () => {
-    const policyId = 'test-policy';
-    const context = { userId: '123' };
-    const result: PolicyEvaluationResult = {
-      policyId,
-      result: true,
-      timestamp: Date.now()
-    };
-
     it('should track cache hits and misses', () => {
-      // 첫 번째 조회는 miss
-      service.getPolicyEvaluation(policyId, context);
+      const policyId = 'policy1';
+      const context = { user: 'test' };
+      const result: PolicyEvaluationResult = {
+        policyId,
+        result: true,
+        timestamp: Date.now()
+      };
       
-      // 캐시에 저장
+      // 캐시에 데이터 저장
       service.cachePolicyEvaluation(policyId, context, result);
       
-      // 두 번째 조회는 hit
+      // 캐시 히트
       service.getPolicyEvaluation(policyId, context);
-      
+      // 캐시 미스 (다른 컨텍스트)
+      service.getPolicyEvaluation(policyId, { user: 'different' });
+
       const stats = service.getStats();
+      
       expect(stats.hits).toBe(1);
       expect(stats.misses).toBe(1);
       expect(stats.totalRequests).toBe(2);
-      expect(stats.hitRate).toBe(50);
+      expect(stats.hitRate).toBe(0.5); // 50% -> 0.5
     });
 
     it('should calculate hit rate correctly', () => {
+      const policyId = 'policy1';
+      const context = { user: 'test' };
+      const result: PolicyEvaluationResult = {
+        policyId,
+        result: true,
+        timestamp: Date.now()
+      };
+      
+      // 캐시에 데이터 저장
       service.cachePolicyEvaluation(policyId, context, result);
       
-      // 3번 hit
+      // 3번의 캐시 히트
       service.getPolicyEvaluation(policyId, context);
       service.getPolicyEvaluation(policyId, context);
       service.getPolicyEvaluation(policyId, context);
-      
-      // 1번 miss
-      service.getPolicyEvaluation('non-existent', context);
-      
+      // 1번의 캐시 미스 (다른 정책)
+      service.getPolicyEvaluation('policy2', context);
+
       const stats = service.getStats();
+      
       expect(stats.hits).toBe(3);
       expect(stats.misses).toBe(1);
-      expect(stats.hitRate).toBe(75);
+      expect(stats.totalRequests).toBe(4);
+      expect(stats.hitRate).toBe(0.75); // 75% -> 0.75
     });
   });
 

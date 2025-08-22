@@ -2,6 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { createHash } from 'crypto';
 import { promises as fs } from 'fs';
 import { join } from 'path';
+import { promisify } from 'util';
+import * as zlib from 'zlib';
+
+const gzip = promisify(zlib.gzip);
+const gunzip = promisify(zlib.gunzip);
 
 export interface RollingBufferConfig {
   enabled: boolean;
@@ -29,6 +34,9 @@ export interface RollingBufferStats {
   evictions: number;
   fileWrites: number;
   fileReads: number;
+  compressionRatio: number; // 압축 비율 추가
+  compressedFiles: number;  // 압축된 파일 수 추가
+  uncompressedFiles: number; // 압축되지 않은 파일 수 추가
 }
 
 @Injectable()
@@ -96,11 +104,28 @@ export class RollingBufferService<T = any> {
   private startCleanupTimer(): void {
     if (this.cleanupTimer) {
       clearInterval(this.cleanupTimer);
+      this.cleanupTimer = undefined; // 즉시 undefined로 설정
     }
 
-    this.cleanupTimer = setInterval(async () => {
-      await this.performCleanup();
+    this.cleanupTimer = setInterval(() => {
+      this.performCleanup();
     }, this.config.cleanupInterval);
+    
+    // 타이머가 가비지 컬렉션되지 않도록 unref() 호출
+    if (this.cleanupTimer && typeof this.cleanupTimer.unref === 'function') {
+      this.cleanupTimer.unref();
+    }
+  }
+
+  /**
+   * 정리 타이머 정지
+   */
+  private stopCleanupTimer(): void {
+    if (this.cleanupTimer) {
+      clearInterval(this.cleanupTimer);
+      this.cleanupTimer = undefined; // 즉시 undefined로 설정
+      this.logger.debug('Cleanup timer stopped');
+    }
   }
 
   /**
@@ -131,7 +156,7 @@ export class RollingBufferService<T = any> {
       const maxAge = 24 * 60 * 60 * 1000; // 24시간
 
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith('.json') || file.endsWith('.gz')) {
           const filePath = join(this.config.fileStoragePath, file);
           const stats = await fs.stat(filePath);
           
@@ -204,19 +229,28 @@ export class RollingBufferService<T = any> {
       
       if (itemsToRoll.length === 0) return;
 
-      const filename = `buffer-${Date.now()}.json`;
+      const timestamp = Date.now();
+      const filename = this.config.compressionEnabled ? 
+        `buffer-${timestamp}.json.gz` : 
+        `buffer-${timestamp}.json`;
       const filePath = join(this.config.fileStoragePath, filename);
       
       const fileContent = {
         items: itemsToRoll,
-        timestamp: Date.now(),
+        timestamp,
         count: itemsToRoll.length,
+        compressed: this.config.compressionEnabled,
       };
 
-      await fs.writeFile(filePath, JSON.stringify(fileContent, null, 2));
-      this.stats.fileWrites++;
+      if (this.config.compressionEnabled) {
+        const compressedData = await this.compressData(fileContent);
+        await fs.writeFile(filePath, compressedData);
+      } else {
+        await fs.writeFile(filePath, JSON.stringify(fileContent, null, 2));
+      }
       
-      this.logger.debug(`Rolled ${itemsToRoll.length} items to file: ${filename}`);
+      this.stats.fileWrites++;
+      this.logger.debug(`Rolled ${itemsToRoll.length} items to ${this.config.compressionEnabled ? 'compressed' : 'uncompressed'} file: ${filename}`);
     } catch (error) {
       this.logger.error('Failed to roll items to file', error);
       // 롤링 실패 시 메모리 버퍼에 다시 추가
@@ -258,10 +292,76 @@ export class RollingBufferService<T = any> {
       const files = await fs.readdir(this.config.fileStoragePath);
       
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith('.json') || file.endsWith('.gz')) {
           const filePath = join(this.config.fileStoragePath, file);
-          const content = await fs.readFile(filePath, 'utf-8');
-          const fileData = JSON.parse(content);
+          
+          if (file.endsWith('.gz')) {
+            // 압축된 파일 처리
+            return await this.getItemFromCompressedFile(id);
+          } else {
+            // 일반 JSON 파일 처리
+            const content = await fs.readFile(filePath, 'utf-8');
+            const fileData = JSON.parse(content);
+            
+            const item = fileData.items?.find((item: BufferItem<T>) => item.id === id);
+            if (item) {
+              return item;
+            }
+          }
+        }
+      }
+    } catch (error) {
+      this.logger.error('Failed to read item from file', error);
+    }
+
+    return null;
+  }
+
+  /**
+   * 데이터 압축
+   */
+  private async compressData(data: any): Promise<Buffer> {
+    try {
+      const jsonString = JSON.stringify(data);
+      const compressed = await gzip(jsonString);
+      this.logger.debug(`Data compressed: ${jsonString.length} -> ${compressed.length} bytes`);
+      return compressed;
+    } catch (error) {
+      this.logger.warn('Failed to compress data, using uncompressed format:', error);
+      return Buffer.from(JSON.stringify(data));
+    }
+  }
+
+  /**
+   * 데이터 압축 해제
+   */
+  private async decompressData(compressedData: Buffer): Promise<any> {
+    try {
+      const decompressed = await gunzip(compressedData);
+      return JSON.parse(decompressed.toString());
+    } catch (error) {
+      this.logger.warn('Failed to decompress data, trying to parse as JSON:', error);
+      try {
+        return JSON.parse(compressedData.toString());
+      } catch (parseError) {
+        this.logger.error('Failed to parse data as JSON:', parseError);
+        throw new Error('Data corruption detected');
+      }
+    }
+  }
+
+  /**
+   * 압축된 파일에서 항목 조회
+   */
+  private async getItemFromCompressedFile(id: string): Promise<BufferItem<T> | null> {
+    try {
+      const files = await fs.readdir(this.config.fileStoragePath);
+      
+      for (const file of files) {
+        if (file.endsWith('.gz')) {
+          const filePath = join(this.config.fileStoragePath, file);
+          const compressedContent = await fs.readFile(filePath);
+          const fileData = await this.decompressData(compressedContent);
           
           const item = fileData.items?.find((item: BufferItem<T>) => item.id === id);
           if (item) {
@@ -270,7 +370,7 @@ export class RollingBufferService<T = any> {
         }
       }
     } catch (error) {
-      this.logger.error('Failed to read item from file', error);
+      this.logger.error('Failed to read item from compressed file:', error);
     }
 
     return null;
@@ -335,35 +435,71 @@ export class RollingBufferService<T = any> {
    * 설정 업데이트
    */
   updateConfig(config: Partial<RollingBufferConfig>): void {
-    this.config = { ...this.config, ...config };
-    
-    if (this.config.enabled && !this.cleanupTimer) {
-      this.initialize();
-    } else if (!this.config.enabled && this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-      this.cleanupTimer = undefined;
+    try {
+      // 설정 유효성 검사
+      this.validateConfig(config);
+      
+      this.config = { ...this.config, ...config };
+      
+      if (this.config.enabled && !this.cleanupTimer) {
+        this.initialize();
+      } else if (!this.config.enabled && this.cleanupTimer) {
+        this.stopCleanupTimer();
+      }
+      
+      this.logger.log(`Rolling buffer config updated: ${JSON.stringify(this.config)}`);
+    } catch (error) {
+      this.logger.error('Failed to update rolling buffer config:', error);
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      throw new Error(`Invalid rolling buffer configuration: ${errorMessage}`);
+    }
+  }
+
+  /**
+   * 설정 유효성 검사
+   */
+  private validateConfig(config: Partial<RollingBufferConfig>): void {
+    if (config.maxMemoryItems !== undefined && config.maxMemoryItems <= 0) {
+      throw new Error('maxMemoryItems must be greater than 0');
     }
     
-    this.logger.log(`Rolling buffer config updated: ${JSON.stringify(this.config)}`);
+    if (config.maxFileSize !== undefined && config.maxFileSize <= 0) {
+      throw new Error('maxFileSize must be greater than 0');
+    }
+    
+    if (config.cleanupInterval !== undefined && config.cleanupInterval <= 0) {
+      throw new Error('cleanupInterval must be greater than 0');
+    }
+    
+    if (config.maxMemoryItems !== undefined && config.maxMemoryItems > 10000) {
+      this.logger.warn('maxMemoryItems is very high, this could cause memory issues');
+    }
+    
+    if (config.maxFileSize !== undefined && config.maxFileSize > 100 * 1024 * 1024) { // 100MB
+      this.logger.warn('maxFileSize is very high, this could cause disk space issues');
+    }
   }
 
   /**
    * 통계 조회
    */
-  getStats(): RollingBufferStats {
+  async getStats(): Promise<RollingBufferStats> {
     const memorySize = this.calculateMemorySize();
-    const fileSize = this.calculateFileSize();
+    const fileStats = await this.calculateFileStats();
     
     return {
       memoryItems: this.memoryBuffer.length,
-      fileItems: 0, // 파일 항목 수는 동적으로 계산해야 함
-      totalItems: this.memoryBuffer.length,
+      fileItems: fileStats.itemCount,
+      totalItems: this.memoryBuffer.length + fileStats.itemCount,
       memorySize,
-      fileSize,
-      totalSize: memorySize + fileSize,
+      fileSize: fileStats.totalSize,
+      totalSize: memorySize + fileStats.totalSize,
       evictions: this.stats.evictions,
       fileWrites: this.stats.fileWrites,
       fileReads: this.stats.fileReads,
+      compressionRatio: fileStats.compressionRatio,
+      compressedFiles: fileStats.compressedFiles,
+      uncompressedFiles: fileStats.uncompressedFiles,
     };
   }
 
@@ -377,11 +513,82 @@ export class RollingBufferService<T = any> {
   }
 
   /**
-   * 파일 크기 계산
+   * 파일 통계 계산
    */
-  private calculateFileSize(): number {
-    // 간단한 구현: 실제로는 파일 시스템에서 계산해야 함
-    return 0;
+  private async calculateFileStats(): Promise<{
+    itemCount: number;
+    totalSize: number;
+    compressionRatio: number;
+    compressedFiles: number;
+    uncompressedFiles: number;
+  }> {
+    try {
+      const files = await fs.readdir(this.config.fileStoragePath);
+      let itemCount = 0;
+      let totalSize = 0;
+      let compressedFiles = 0;
+      let uncompressedFiles = 0;
+      let totalUncompressedSize = 0;
+
+      for (const file of files) {
+        if (file.endsWith('.json') || file.endsWith('.gz')) {
+          const filePath = join(this.config.fileStoragePath, file);
+          const stats = await fs.stat(filePath);
+          totalSize += stats.size;
+
+          if (file.endsWith('.gz')) {
+            compressedFiles++;
+            // 압축된 파일의 경우 압축 해제하여 실제 크기 추정
+            try {
+              const compressedContent = await fs.readFile(filePath);
+              const decompressed = await this.decompressData(compressedContent);
+              totalUncompressedSize += JSON.stringify(decompressed).length;
+            } catch {
+              // 압축 해제 실패 시 파일 크기로 추정
+              totalUncompressedSize += stats.size * 3; // 일반적으로 3:1 압축 비율 가정
+            }
+          } else {
+            uncompressedFiles++;
+            totalUncompressedSize += stats.size;
+          }
+
+          // 파일에서 항목 수 계산
+          try {
+            if (file.endsWith('.gz')) {
+              const compressedContent = await fs.readFile(filePath);
+              const fileData = await this.decompressData(compressedContent);
+              itemCount += fileData.items?.length || 0;
+            } else {
+              const content = await fs.readFile(filePath, 'utf-8');
+              const fileData = JSON.parse(content);
+              itemCount += fileData.items?.length || 0;
+            }
+          } catch {
+            // 파일 읽기 실패 시 무시
+          }
+        }
+      }
+
+      const compressionRatio = totalUncompressedSize > 0 ? 
+        (totalUncompressedSize - totalSize) / totalUncompressedSize : 0;
+
+      return {
+        itemCount,
+        totalSize,
+        compressionRatio,
+        compressedFiles,
+        uncompressedFiles,
+      };
+    } catch (error) {
+      this.logger.warn('Failed to calculate file stats:', error);
+      return {
+        itemCount: 0,
+        totalSize: 0,
+        compressionRatio: 0,
+        compressedFiles: 0,
+        uncompressedFiles: 0,
+      };
+    }
   }
 
   /**
@@ -402,7 +609,7 @@ export class RollingBufferService<T = any> {
     try {
       const files = await fs.readdir(this.config.fileStoragePath);
       for (const file of files) {
-        if (file.endsWith('.json')) {
+        if (file.endsWith('.json') || file.endsWith('.gz')) {
           const filePath = join(this.config.fileStoragePath, file);
           await fs.unlink(filePath);
         }
@@ -417,13 +624,14 @@ export class RollingBufferService<T = any> {
    * 서비스 정리
    */
   async onModuleDestroy(): Promise<void> {
-    if (this.cleanupTimer) {
-      clearInterval(this.cleanupTimer);
-    }
+    // 타이머 정리 강화
+    this.stopCleanupTimer();
     
     // 메모리 버퍼를 파일로 저장
     if (this.memoryBuffer.length > 0) {
       await this.rollToFile();
     }
+    
+    this.logger.log('RollingBufferService destroyed and cleaned up');
   }
 }

@@ -30,6 +30,8 @@ import { WorkflowStateTrackerService } from './workflow-state-tracker.service';
     ProjectConfigService,
     GitService,
     GithubIntegrationService,
+    PolicyCacheService,
+    RollingBufferService,
     {
       provide: GIT_BASE_DIR,
       useFactory: () => process.env.GIT_BASE_DIR || process.cwd(),

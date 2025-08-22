@@ -393,12 +393,10 @@ describe('RollingBufferService', () => {
   });
 
   describe('통계', () => {
-    beforeEach(async () => {
-      await service.addItem('test item');
-    });
-
-    it('should return correct statistics', () => {
-      const stats = service.getStats();
+    it('should return correct statistics', async () => {
+      await service.addItem('test-item');
+      
+      const stats = await service.getStats();
       
       expect(stats.memoryItems).toBe(1);
       expect(stats.totalItems).toBe(1);
@@ -407,7 +405,10 @@ describe('RollingBufferService', () => {
       expect(stats.fileReads).toBe(0);
     });
 
-    it('should calculate memory size correctly', () => {
+    it('should calculate memory size correctly', async () => {
+      // 데이터 추가
+      await service.addItem('test-item');
+      
       const memorySize = service['calculateMemorySize']();
       
       expect(memorySize).toBeGreaterThan(0);
