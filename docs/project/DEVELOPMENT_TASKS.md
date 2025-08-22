@@ -638,9 +638,11 @@
 - **담당 영역**: 문서화
 - **의존성**: TASK-081
 - **완료 기준**:
-  - [ ] Essential commands 테이블과 DSL action 매핑 문서화
-  - [ ] 설치/사전 요구사항(claude 설치/로그인) 반영
-  - [ ] 기본/고급 예제 추가
+  - [x] Essential commands 테이블과 DSL action 매핑 문서화
+  - [x] 설치/사전 요구사항(claude 설치/로그인) 반영
+  - [x] 기본/고급 예제 추가
+- **완료일**: 2025년 8월 22일
+- **PR**: [#31](https://github.com/username/claude-auto-worker/pull/31)
 
 ### 🟢 낮은 우선순위 태스크
 
@@ -689,9 +691,11 @@
 - **담당 영역**: 문서화
 - **의존성**: TASK-084, TASK-080
 - **완료 기준**:
-  - [ ] `docs/examples/*`와 `README`에 `type: "claude"` 사용 시 `action` 필수임을 명시
-  - [ ] 샘플 DSL에 `action` 필드 추가 반영
-  - [ ] 변경점(마이그레이션 노트) 짧은 섹션 추가
+  - [x] `docs/examples/*`와 `README`에 `type: "claude"` 사용 시 `action` 필수임을 명시
+  - [x] 샘플 DSL에 `action` 필드 추가 반영
+  - [x] 변경점(마이그레이션 노트) 짧은 섹션 추가
+- **완료일**: 2025년 8월 22일
+- **PR**: [#31](https://github.com/username/claude-auto-worker/pull/31)
 
 #### TASK-089: CLI 로깅 시스템 최적화 및 optional 설정
 - **예상 시간**: 8시간
