@@ -37,10 +37,9 @@ export class GlobalHttpExceptionFilter implements ExceptionFilter {
       requestId: request?.headers?.['x-request-id'],
     };
 
-    this.logger.error(
-      `HTTP ${status} on ${errorMeta.method} ${errorMeta.url}`,
-      isHttp ? undefined : String(exception),
-    );
+    const message = `HTTP ${status} on ${errorMeta.method} ${errorMeta.url}`;
+    const stack = (exception as any)?.stack as string | undefined;
+    this.logger.error(message, stack);
 
     response.status(status).json({
       ...(typeof payload === 'object' ? payload : { message: payload }),
