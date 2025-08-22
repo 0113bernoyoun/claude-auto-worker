@@ -12,6 +12,15 @@ export interface ProjectConfig {
   logging: {
     level: LogLevel;
   };
+  monitoring?: {
+    memoryWatchdog?: {
+      enabled?: boolean;
+      intervalMs?: number;
+      warnRssMb?: number;
+      restartRssMb?: number;
+      action?: 'log' | 'exit';
+    };
+  };
   claude?: {
     apiKey?: string;
     model?: string;
@@ -33,6 +42,15 @@ function createDefaultConfig(): ProjectConfig {
     logging: {
       level: (process.env.LOG_LEVEL as LogLevel) || 'info',
     },
+    monitoring: {
+      memoryWatchdog: {
+        enabled: true,
+        intervalMs: Number(process.env.MEM_WATCH_INTERVAL_MS) || 15000,
+        warnRssMb: Number(process.env.MEM_WATCH_WARN_MB) || 800,
+        restartRssMb: Number(process.env.MEM_WATCH_RESTART_MB) || 1024,
+        action: (process.env.MEM_WATCH_ACTION as any) || 'log',
+      },
+    },
     claude: {
       apiKey: process.env.CLAUDE_API_KEY,
       model: process.env.CLAUDE_MODEL || 'claude-3-5-sonnet-latest',
@@ -53,6 +71,15 @@ const schema = Joi.object<ProjectConfig>({
   logging: Joi.object({
     level: Joi.string().valid('debug', 'info', 'warn', 'error').default('info'),
   }).default({ level: 'info' }),
+  monitoring: Joi.object({
+    memoryWatchdog: Joi.object({
+      enabled: Joi.boolean().default(true),
+      intervalMs: Joi.number().min(500).default(15000),
+      warnRssMb: Joi.number().min(64).default(800),
+      restartRssMb: Joi.number().min(Joi.ref('warnRssMb')).default(1024),
+      action: Joi.string().valid('log', 'exit').default('log'),
+    }).default(),
+  }).default(),
   claude: Joi.object({
     apiKey: Joi.string().optional(),
     model: Joi.string().default('claude-3-5-sonnet-latest'),
