@@ -125,9 +125,9 @@ npm run start:dev
 
 | 명령어 | 설명 | 옵션 | 예시 |
 |--------|------|------|------|
-| `run` | 워크플로우 실행 | `--dry-run`, `--verbose` | `claude-auto-worker run workflow.yaml` |
-| `status` | 실행 상태 확인 | `--json`, `--since` | `claude-auto-worker status --json` |
-| `logs` | 로그 확인 | `--follow`, `--since`, `--limit` | `claude-auto-worker logs --follow` |
+| `run` | 워크플로우 실행 | `--dry-run`, `--verbose`, `--branch` | `claude-auto-worker run workflow.yaml --dry-run` |
+| `status` | 실행 상태 확인 | `--json`, `--since`, `--all` | `claude-auto-worker status --json` |
+| `logs` | 로그 확인 | `--follow`, `--since`, `--limit`, `--analysis` | `claude-auto-worker logs --follow` |
 | `config` | 설정 확인 | `--show-secrets` | `claude-auto-worker config` |
 | `help` | 도움말 | `[command]` | `claude-auto-worker help run` |
 
@@ -135,13 +135,13 @@ npm run start:dev
 
 | Action | 설명 | 사용 예시 |
 |--------|------|-----------|
-| `analyze` | 코드/내용 분석 | 코드 구조 분석, 성능 검토 |
-| `review` | 코드 리뷰 및 품질 검사 | 보안 취약점 검사, 코드 품질 평가 |
-| `improve` | 코드 개선 및 최적화 | 리팩토링, 성능 최적화 |
-| `fix` | 버그 수정 및 문제 해결 | 에러 수정, 경고 제거 |
-| `document` | 문서화 및 주석 추가 | README 업데이트, API 문서 생성 |
-| `test` | 테스트 생성 및 실행 | 단위 테스트, 통합 테스트 |
-| `deploy` | 배포 및 배포 스크립트 | CI/CD 파이프라인, 배포 자동화 |
+| `task` | 일반적인 작업 수행 | 코드 분석, 문서 작성, 리뷰 등 |
+| `query` | 질의 및 조회 | 정보 검색, 상태 확인, 데이터 분석 등 |
+| `continue` | 이어가기 | 이전 작업 계속, 세션 재개 등 |
+| `resume` | 재개 | 중단된 작업 재시작, 복구 등 |
+| `commit` | 커밋 관련 | 변경사항 커밋, 브랜치 관리 등 |
+
+**참고**: 현재 스키마에서는 위 5가지 Action 값이 공식적으로 지원됩니다. 향후 `analyze`, `review`, `improve` 등의 확장 Action 값도 지원 예정입니다.
 
 #### 🚀 Claude CLI 설치 및 로그인
 
@@ -463,13 +463,21 @@ stages:
 ```
 
 #### 지원되는 Action 값
-- `analyze`: 분석 및 검토
-- `review`: 코드 리뷰
-- `improve`: 개선 및 최적화
-- `fix`: 버그 수정
-- `document`: 문서화
-- `test`: 테스트 생성/실행
-- `deploy`: 배포 관련
+**실제 스키마 기준 (권장):**
+- `task`: 일반적인 작업 수행
+- `query`: 질의 및 조회
+- `continue`: 이어가기
+- `resume`: 재개
+- `commit`: 커밋 관련
+
+**확장 Action 값 (향후 지원 예정):**
+- `analyze`: 코드/내용 분석
+- `review`: 코드 리뷰 및 품질 검사
+- `improve`: 코드 개선 및 최적화
+- `fix`: 버그 수정 및 문제 해결
+- `document`: 문서화 및 주석 추가
+- `test`: 테스트 생성 및 실행
+- `deploy`: 배포 및 배포 스크립트
 
 ## 🛠️ 개발 환경 설정
 
