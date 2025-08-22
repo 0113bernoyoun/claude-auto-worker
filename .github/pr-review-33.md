@@ -1,51 +1,27 @@
-### 🧾 Overall
-- 상태: Ready to merge
-- 범위: G1 즉효 안정화(보안 헤더, 전역 Validation, 전역 예외 처리, 대시보드 API 연결)
-- 빌드/테스트: 모두 통과(12/12)
+### ✨ 요약(What)
+- `TASK-109` 추가: Watchman recrawl 경고 재발 완화 태스크 정의
+- `.watchmanconfig` 무시 경로 구성 및 운영 가이드(대규모 I/O, 절전/디스크) 포함
 
-### 🌟 Highlights
-- helmet 도입으로 기본 보안 헤더 강화
-- `ValidationPipe` 전역 적용으로 입력 방어선 확보(whitelist/transform)
-- 글로벌 예외 필터 추가로 에러 로깅/응답 일관성 개선
-- 대시보드 API URL을 환경변수로 고정, `/api` 프리픽스 준수 확인
+### 🧭 배경/이유(Why)
+- 로컬 개발 중 watchman이 디렉토리 변경 이벤트를 드롭하거나 대량 변경으로 recrawl 발생 → 개발 체감 성능 저하, 경고 노이즈 증가
 
-### 🧩 Changes Review
-- `src/main.ts`
-  - `helmet()` 적용, `ValidationPipe` 전역 등록, `GlobalHttpExceptionFilter` 등록
-  - 글로벌 프리픽스 `api` 유지(문서 규칙 일치)
-- `src/core/http-exception.filter.ts`
-  - 모든 예외 @Catch() 처리, 상태코드/타임스탬프/요청 경로 포함 JSON 응답
-  - 메타 정보 로깅으로 운영 관측성 향상
-- `src/dashboard/.env.local`
-  - `NEXT_PUBLIC_API_URL=http://localhost:5849/api` 명시
+### 🛠 변경사항(Changes)
+- `docs/project/DEVELOPMENT_TASKS.md`: `TASK-109` 문구 추가
 
-### 🧩 Minor suggestions (비차단)
-1) 구성 일관성 제고 제안
-- 현재 `main.ts`에서 프리픽스가 하드코딩(`'api'`)입니다. `ProjectConfigService`의 `apiPrefix`(`/api`)와 연동하면 환경별 구성 일관성이 향상됩니다.
-  - 예: 구성 주입 또는 부트스트랩에서 서비스 인스턴스 생성 후 `app.setGlobalPrefix(projectConfig.apiPrefix)`
+### ✅ 테스트(How verified)
+- 코드 영향 없음(문서 변경). 기존 빌드/유닛/E2E 테스트 PASS 확인
 
-2) ValidationPipe 옵션 분기
-- 운영 환경에서는 `forbidNonWhitelisted: true` 권장(화이트리스트 외 필드 차단). 개발/테스트는 현 설정 유지 가능.
-  - 예: `process.env.NODE_ENV === 'production' ? true : false`
+### 🎯 영향도/리스크(Impact/Risk)
+- 런타임 무영향. 문서 변경만 존재
 
-3) 예외 필터 로깅 개선(선택)
-- 비-HTTP 예외 로깅 시 `String(exception)` 대신 stack 포함 로깅을 고려하면 트러블슈팅에 유리합니다.
-  - 예: `this.logger.error(message, (exception as Error)?.stack)`
+### 🚀 롤아웃/롤백(Rollout/Rollback)
+- 병합 후 팀에 `.watchmanconfig` 기본 제외 목록 및 운영 팁 공유
+- 필요 시 문서 롤백 가능
 
-4) Helmet 세부 옵션 검토(선택)
-- 대시보드가 동일 오리진이라면 기본값으로 충분하나, 추후 프록시/서브도메인 사용 시 `crossOriginResourcePolicy` 등 세부 옵션을 환경별 분기 고려.
+### ☑️ 체크리스트(Checklist)
+- [x] 문서 빌드/테스트 무영향 확인
+- [x] 태스크 설명/완료기준 포함
+- [ ] 머지 후 `.watchmanconfig` 템플릿 PR 생성
 
-### ✅ Checklist
-- [x] 포트 5849 기본값 유지 및 `/api` 프리픽스 준수
-- [x] 빌드/테스트 통과
-- [x] 보안/안정화 기본선 강화(helmet, ValidationPipe, 예외 필터)
-- [x] 대시보드 API 연결 확인
-- [ ] (권장) `apiPrefix` 구성값 적용
-- [ ] (권장) prod에서 `forbidNonWhitelisted` 활성화
-
-### 🔗 References
-- `docs/project/PRD.md`, `TRD.md`의 보안/안정성 지침과 부합
-- `docs/project/DEVELOPMENT_TASKS.md`의 G1 항목과 직접 연관
-
----
-요약: 변경은 간결하고 안전하며, 현재 기준 머지 가능 상태입니다. 제안사항은 모두 비차단이며 후속 PR에서 반영하면 좋겠습니다. 🚀
+### 🔗 참고(References)
+- Watchman recrawl: https://facebook.github.io/watchman/docs/troubleshooting.html#recrawl
