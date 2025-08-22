@@ -119,6 +119,129 @@ claude-auto-worker enhanced-logs --analysis --state
 npm run start:dev
 ```
 
+### 🤖 **Claude CLI 상세 사용법**
+
+#### 📋 Essential Commands 테이블
+
+| 명령어 | 설명 | 옵션 | 예시 |
+|--------|------|------|------|
+| `run` | 워크플로우 실행 | `--dry-run`, `--verbose`, `--branch` | `claude-auto-worker run workflow.yaml --dry-run` |
+| `status` | 실행 상태 확인 | `--json`, `--since`, `--all` | `claude-auto-worker status --json` |
+| `logs` | 로그 확인 | `--follow`, `--since`, `--limit`, `--analysis` | `claude-auto-worker logs --follow` |
+| `config` | 설정 확인 | `--show-secrets` | `claude-auto-worker config` |
+| `help` | 도움말 | `[command]` | `claude-auto-worker help run` |
+
+#### 🔧 DSL Action 매핑
+
+| Action | 설명 | 사용 예시 |
+|--------|------|-----------|
+| `task` | 일반적인 작업 수행 | 코드 분석, 문서 작성, 리뷰 등 |
+| `query` | 질의 및 조회 | 정보 검색, 상태 확인, 데이터 분석 등 |
+| `continue` | 이어가기 | 이전 작업 계속, 세션 재개 등 |
+| `resume` | 재개 | 중단된 작업 재시작, 복구 등 |
+| `commit` | 커밋 관련 | 변경사항 커밋, 브랜치 관리 등 |
+
+**참고**: 현재 스키마에서는 위 5가지 Action 값이 공식적으로 지원됩니다. 향후 `analyze`, `review`, `improve` 등의 확장 Action 값도 지원 예정입니다.
+
+#### 🚀 Claude CLI 설치 및 로그인
+
+##### 1. Claude CLI 설치
+```bash
+# macOS (Homebrew)
+brew install claude
+
+# Linux (Snap)
+sudo snap install claude
+
+# Windows (Chocolatey)
+choco install claude
+
+# 직접 설치
+curl -fsSL https://claude.ai/install.sh | sh
+```
+
+##### 2. Claude CLI 로그인
+```bash
+# 대화형 로그인
+claude auth login
+
+# 또는 환경변수로 설정
+export CLAUDE_API_KEY="your-api-key-here"
+```
+
+##### 3. 인증 확인
+```bash
+# 로그인 상태 확인
+claude auth status
+
+# API 키 테스트
+claude chat "Hello, test message"
+```
+
+#### **워크플로우 실행**
+```bash
+# 기본 실행
+claude-auto-worker run workflow.yaml
+
+# 특정 브랜치에서 실행
+claude-auto-worker run workflow.yaml --branch feature/new-feature
+
+# 드라이런 (변경사항 적용 안함)
+claude-auto-worker run workflow.yaml --dry-run
+
+# 상세 로그와 함께 실행
+claude-auto-worker run workflow.yaml --verbose
+```
+
+#### **상태 모니터링**
+```bash
+# 현재 실행 상태 확인
+claude-auto-worker status
+
+# 특정 실행 ID의 상세 상태
+claude-auto-worker enhanced-status -r <run-id>
+
+# 모든 실행 상태 목록
+claude-auto-worker enhanced-status --all
+
+# 상태를 JSON 형식으로 출력
+claude-auto-worker enhanced-status -r <run-id> --format json
+```
+
+#### **로그 분석**
+```bash
+# 실시간 로그 스트리밍
+claude-auto-worker logs --tail
+
+# 특정 실행 ID의 로그
+claude-auto-worker enhanced-logs -r <run-id>
+
+# 로그 분석 포함
+claude-auto-worker enhanced-logs -r <run-id> --analysis
+
+# 상태 정보와 함께 로그
+claude-auto-worker enhanced-logs -r <run-id> --state
+
+# 특정 로그 레벨만 필터링
+claude-auto-worker enhanced-logs -r <run-id> --level error
+```
+
+#### **설정 및 구성**
+```bash
+# 설정 확인
+claude-auto-worker config
+
+# 환경 변수 설정
+export CLAUDE_API_KEY="your-api-key"
+export GITHUB_TOKEN="your-github-token"
+
+# 로컬 개발 환경 설정
+npm run setup:local
+
+# 로컬 환경 검증
+npm run verify:local
+```
+
 ### 🌐 API 서버 / 대시보드
 
 - **기본 포트**: 5849
@@ -202,12 +325,14 @@ description: "Automated code refactoring workflow"
 
 stages:
   - name: analyze
-    type: prompt
+    type: claude
+    action: "analyze"
     prompt: "Analyze the code and identify refactoring opportunities"
     apply_changes: false
     
   - name: refactor
-    type: prompt
+    type: claude
+    action: "refactor"
     prompt: "Refactor the code to improve readability and maintainability"
     apply_changes: true
     branch: "refactor/{{timestamp}}"
@@ -220,6 +345,73 @@ stages:
     type: git
     message: "Refactor: {{stage.analyze.summary}}"
     push: true
+```
+
+### 고급 워크플로우 예제
+
+#### **AI 코드 리뷰 및 개선**
+```yaml
+name: "AI Code Review"
+description: "Automated code review and improvement workflow"
+
+stages:
+  - name: review
+    type: claude
+    action: "review"
+    prompt: |
+      Review the code for:
+      - Code quality and best practices
+      - Performance optimizations
+      - Security vulnerabilities
+      - Documentation improvements
+    apply_changes: false
+    
+  - name: improve
+    type: claude
+    action: "improve"
+    prompt: "Apply the suggested improvements from the review"
+    apply_changes: true
+    branch: "improve/{{timestamp}}"
+    
+  - name: validate
+    type: run
+    commands: ["npm test", "npm run lint", "npm run build"]
+    
+  - name: document
+    type: claude
+    action: "document"
+    prompt: "Update documentation based on the code changes"
+    apply_changes: true
+```
+
+#### **자동화된 버그 수정**
+```yaml
+name: "Bug Fix Automation"
+description: "Automated bug detection and fixing"
+
+stages:
+  - name: detect
+    type: claude
+    action: "detect"
+    prompt: "Analyze the code and identify potential bugs or issues"
+    apply_changes: false
+    
+  - name: fix
+    type: claude
+    action: "fix"
+    prompt: "Fix the identified bugs and issues"
+    apply_changes: true
+    branch: "fix/{{timestamp}}"
+    
+  - name: test
+    type: run
+    commands: ["npm test", "npm run test:integration"]
+    
+  - name: verify
+    type: claude
+    action: "verify"
+    prompt: "Verify that all bugs are fixed and no new issues introduced"
+    apply_changes: false
 ```
 
 ## 🛠️ 기술 스택
@@ -248,6 +440,44 @@ stages:
 - [🔧 TRD](./TRD_Claude_Workflow_Engine.md) - 기술적 구현 방법 및 아키텍처
 - [📋 개발 태스크](./DEVELOPMENT_TASKS.md) - 상세 개발 계획 및 진행 상황
 - [📊 프로젝트 상태](./PROJECT_STATUS.md) - 전체 진행 상황 및 로드맵
+
+## 🔄 마이그레이션 노트
+
+### v0.2.0 → v0.3.0 (2025년 8월 21일)
+- **중요 변경사항**: `type: "claude"` 스텝에 `action` 필드가 **필수**가 되었습니다
+- **기존 워크플로우**: `action` 필드가 없는 경우 실행 시 오류가 발생합니다
+- **업데이트 방법**: 모든 `type: "claude"` 스텝에 적절한 `action` 값을 추가하세요
+
+#### 마이그레이션 예시
+```yaml
+# 이전 버전 (v0.2.0)
+- name: "코드 분석"
+  type: "claude"
+  prompt: "코드를 분석해주세요"
+
+# 새 버전 (v0.3.0) - action 필드 추가 필요
+- name: "코드 분석"
+  type: "claude"
+  action: "analyze"  # ← 이 필드가 필수
+  prompt: "코드를 분석해주세요"
+```
+
+#### 지원되는 Action 값
+**실제 스키마 기준 (권장):**
+- `task`: 일반적인 작업 수행
+- `query`: 질의 및 조회
+- `continue`: 이어가기
+- `resume`: 재개
+- `commit`: 커밋 관련
+
+**확장 Action 값 (향후 지원 예정):**
+- `analyze`: 코드/내용 분석
+- `review`: 코드 리뷰 및 품질 검사
+- `improve`: 코드 개선 및 최적화
+- `fix`: 버그 수정 및 문제 해결
+- `document`: 문서화 및 주석 추가
+- `test`: 테스트 생성 및 실행
+- `deploy`: 배포 및 배포 스크립트
 
 ## 🛠️ 개발 환경 설정
 

@@ -2,6 +2,17 @@ name: "Hello World 워크플로우"
 description: "Claude와의 기본적인 상호작용을 위한 간단한 워크플로우"
 version: "1.0.0"
 
+# 중요: Claude 워크플로우에서는 'action' 필드가 필수입니다.
+# 이 필드는 Claude가 수행할 작업의 유형을 명확히 정의하여
+# 더 정확하고 일관된 결과를 제공합니다.
+# 
+# 주요 action 유형 (실제 스키마 기준):
+# - task: 일반적인 작업 수행 (현재 사용 중)
+# - query: 질의 및 조회
+# - continue: 이어가기
+# - resume: 재개
+# - commit: 커밋 관련
+
 variables:
   api_key: "${CLAUDE_API_KEY}"
   model: "claude-3-sonnet-20240229"
@@ -11,6 +22,7 @@ steps:
   - id: "greeting"
     name: "인사하기"
     type: "claude"
+    action: "task"  # 인사하기 작업 유형
     prompt: |
       안녕하세요! 간단한 인사를 해주세요.
       
@@ -27,6 +39,7 @@ steps:
   - id: "introduction"
     name: "자기소개"
     type: "claude"
+    action: "task"  # 자기소개 작업 유형
     prompt: |
       이전 응답을 바탕으로, 당신이 어떤 AI인지 간단히 소개해주세요.
       

@@ -37,3 +37,4 @@ Ready to merge (Minor). 구현 방향과 구조가 PRD/TRD 요구와 일치하�
 Ready to merge(소소한 개선 제안 포함). 머지 후 문서 업데이트는 규칙에 따라 후속 PR에서 처리 부탁드립니다.
 
 
+

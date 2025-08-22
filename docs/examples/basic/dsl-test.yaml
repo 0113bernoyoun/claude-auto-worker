@@ -78,6 +78,7 @@ steps:
   - id: "analyze"
     name: "코드 분석"
     type: "claude"
+    action: "analyze"
     description: "프로젝트 코드를 분석합니다"
     prompt: |
       다음 프로젝트의 코드 구조를 분석해주세요:
