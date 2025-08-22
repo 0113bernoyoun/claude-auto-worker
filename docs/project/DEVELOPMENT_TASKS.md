@@ -1226,17 +1226,21 @@
 - **의존성**: TASK-032
 - **완료 기준**: 캐시 미스/히트 통계 노출, 단위 테스트 포함
 
-#### TASK-104: 프로세스 가드(pm2/Node 옵션) 가이드 및 샘플
+#### TASK-104: 프로세스 가드(pm2/Node 옵션) 가이드 및 샘플 ✅
 - **설명**: pm2 `max_memory_restart` 예시와 `--max-old-space-size` 권장값 문서/스크립트에 반영
 - **우선순위**: 🟡 중간
 - **의존성**: 없음
 - **완료 기준**: 문서/샘플 eco-system 파일 또는 npm 스크립트 제공
+- **완료일**: 2025년 8월 22일
+- **PR**: [#35](https://github.com/0113bernoyoun/claude-auto-worker/pull/35)
 
-#### TASK-105: 메모리 헬스 체크 워치독
+#### TASK-105: 메모리 헬스 체크 워치독 ✅
 - **설명**: `process.memoryUsage()` 주기적 로깅/경고, 임계치 초과 시 경고 또는 선택적 재기동 훅
 - **우선순위**: 🟡 중간
 - **의존성**: 없음
 - **완료 기준**: 임계치/주기 ENV화, 단위 테스트(모킹) 포함
+- **완료일**: 2025년 8월 22일
+- **PR**: [#35](https://github.com/0113bernoyoun/claude-auto-worker/pull/35)
 
 #### TASK-106: API 입력 크기 제한(ValidationPipe 커스텀)
 - **설명**: command/filePath 등 입력 길이/사이즈 제한 검증 추가, 과도한 payload 방지

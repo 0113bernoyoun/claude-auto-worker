@@ -253,6 +253,30 @@ npm run verify:local
 - **개발 서버**: http://localhost:5849
  - **대시보드(Next.js)**: 개발용 `npm run dashboard:start` → http://localhost:5850
 
+### 🧭 관측/자동회복(G2) 설정 가이드
+
+- 메모리 워치독 ENV 예시:
+```bash
+export MEM_WATCH_INTERVAL_MS=15000
+export MEM_WATCH_WARN_MB=800
+export MEM_WATCH_RESTART_MB=1024
+export MEM_WATCH_ACTION=exit # log|exit
+```
+
+- 설정 파일(`claude-auto-worker.config.yaml`) 예시:
+```yaml
+monitoring:
+  memoryWatchdog:
+    enabled: true
+    intervalMs: 15000
+    warnRssMb: 800
+    restartRssMb: 1024
+    action: exit
+```
+
+- PM2 샘플: `tools/pm2-sample.config.cjs`
+- Node 메모리 옵션: `tools/node-memory-flags.md`
+
 ## 📊 개발 진행 상황
 
 > **⚠️ 현재 개발 진행 중입니다!** 
