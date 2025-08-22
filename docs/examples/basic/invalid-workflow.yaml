@@ -1,0 +1,9 @@
+name: "잘못된 워크플로우"
+description: "에러 처리 테스트용"
+
+steps:
+  - id: "invalid_step"
+    name: "잘못된 단계"
+    # action 필드 누락 - 스키마 검증 실패
+    type: "claude"
+    prompt: "이 단계는 실행되지 않아야 합니다."
