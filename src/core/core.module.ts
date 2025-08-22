@@ -5,6 +5,9 @@ import { GitService } from '../git/git.service';
 import { GIT_BASE_DIR } from '../git/git.tokens';
 import { GithubIntegrationService } from '../git/github-integration.service';
 import { ParserModule } from '../parser/parser.module';
+import { CacheModule } from './cache/cache.module';
+import { PolicyCacheService } from './cache/policy-cache.service';
+import { RollingBufferService } from './cache/rolling-buffer.service';
 import { CommandRunnerService } from './command-runner.service';
 import { EnhancedLogParserService } from './enhanced-log-parser.service';
 import { ExecutionStateService } from './execution-state.service';
@@ -14,7 +17,7 @@ import { WorkflowExecutorService } from './workflow-executor.service';
 import { WorkflowStateTrackerService } from './workflow-state-tracker.service';
 
 @Module({
-  imports: [ParserModule],
+  imports: [ParserModule, CacheModule],
   providers: [
     ExecutionStateService,
     FileLoggerService,
@@ -43,6 +46,8 @@ import { WorkflowStateTrackerService } from './workflow-state-tracker.service';
     LoggingConfigService,
     ProjectConfigService,
     GitService,
+    PolicyCacheService,
+    RollingBufferService,
   ],
 })
 export class CoreModule {}
