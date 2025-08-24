@@ -1,0 +1,42 @@
+{
+  "metadata": {
+    "id": "1fbd174f-12d5-406b-a3ca-561f58d12207",
+    "timestamp": "2025-08-22T15:32:12.499Z",
+    "version": "1.0.0",
+    "dataTypes": [
+      {
+        "type": "system_metrics",
+        "enabled": true
+      }
+    ],
+    "recordCount": 1,
+    "fileSize": 0,
+    "checksum": "",
+    "compression": false,
+    "storageType": "file",
+    "storagePath": "./test-snapshots"
+  },
+  "data": {
+    "system_metrics": [
+      {
+        "timestamp": "2025-08-22T15:32:12.499Z",
+        "memory": {
+          "rss": 485801984,
+          "heapTotal": 352419840,
+          "heapUsed": 239098376,
+          "external": 6299003,
+          "arrayBuffers": 2742243
+        },
+        "cpu": {
+          "user": 2428152,
+          "system": 236215
+        },
+        "uptime": 1.6347,
+        "nodeVersion": "v24.5.0",
+        "platform": "darwin"
+      }
+    ]
+  },
+  "createdAt": "2025-08-22T15:32:12.499Z",
+  "expiresAt": "2025-11-20T15:32:12.500Z"
+}

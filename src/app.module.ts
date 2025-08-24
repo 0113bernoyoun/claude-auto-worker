@@ -9,6 +9,7 @@ import { LogsController } from './logs.controller';
 import { ParserModule } from './parser/parser.module';
 import { PolicyModule } from './policy/policy.module';
 import { StatusController } from './status.controller';
+import { WorkflowManagementModule } from './workflow-management/workflow-management.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { StatusController } from './status.controller';
     ParserModule,
     PolicyModule,
     SnapshotModule,
+    WorkflowManagementModule,
   ],
   controllers: [AppController, StatusController, LogsController],
   providers: [AppService],
