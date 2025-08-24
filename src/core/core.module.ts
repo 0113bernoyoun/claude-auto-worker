@@ -1,13 +1,8 @@
 import { Module } from '@nestjs/common';
-import { LoggingConfigService } from '../config/logging-config.service';
-import { ProjectConfigService } from '../config/project-config.service';
+import { ConfigModule } from '../config/config.module';
 import { GitService } from '../git/git.service';
-import { GIT_BASE_DIR } from '../git/git.tokens';
-import { GithubIntegrationService } from '../git/github-integration.service';
-import { ParserModule } from '../parser/parser.module';
-import { CacheModule } from './cache/cache.module';
-import { PolicyCacheService } from './cache/policy-cache.service';
-import { RollingBufferService } from './cache/rolling-buffer.service';
+import { CommandParserService } from '../parser/command.parser.service';
+import { ClaudeTokenHealthService } from './claude-token-health.service';
 import { CommandRunnerService } from './command-runner.service';
 import { EnhancedLogParserService } from './enhanced-log-parser.service';
 import { ExecutionStateService } from './execution-state.service';
@@ -17,39 +12,29 @@ import { WorkflowExecutorService } from './workflow-executor.service';
 import { WorkflowStateTrackerService } from './workflow-state-tracker.service';
 
 @Module({
-  imports: [ParserModule, CacheModule],
+  imports: [ConfigModule],
   providers: [
+    WorkflowExecutorService,
     ExecutionStateService,
+    CommandRunnerService,
     FileLoggerService,
     LoggerContextService,
-    WorkflowExecutorService,
-    CommandRunnerService,
+    GitService,
+    CommandParserService,
+    ClaudeTokenHealthService,
     WorkflowStateTrackerService,
     EnhancedLogParserService,
-    LoggingConfigService,
-    ProjectConfigService,
-    GitService,
-    GithubIntegrationService,
-    PolicyCacheService,
-    RollingBufferService,
-    {
-      provide: GIT_BASE_DIR,
-      useFactory: () => process.env.GIT_BASE_DIR || process.cwd(),
-    },
   ],
   exports: [
+    WorkflowExecutorService,
     ExecutionStateService,
+    CommandRunnerService,
     FileLoggerService,
     LoggerContextService,
-    WorkflowExecutorService,
-    CommandRunnerService,
+    ClaudeTokenHealthService,
     WorkflowStateTrackerService,
     EnhancedLogParserService,
-    LoggingConfigService,
-    ProjectConfigService,
-    GitService,
-    PolicyCacheService,
-    RollingBufferService,
+    ConfigModule, // ConfigModule을 export하여 하위 모듈에서 사용할 수 있도록 함
   ],
 })
 export class CoreModule {}

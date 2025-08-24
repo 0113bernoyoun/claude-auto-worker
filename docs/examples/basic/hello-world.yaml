@@ -18,6 +18,11 @@ variables:
   model: "claude-3-sonnet-20240229"
   temperature: 0.7
 
+stages:
+  - id: "main"
+    name: "메인 실행 단계"
+    steps: ["greeting", "introduction", "output"]
+
 steps:
   - id: "greeting"
     name: "인사하기"

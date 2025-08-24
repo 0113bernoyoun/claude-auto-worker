@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { GitService } from '../git/git.service';
 import { CommandParserService } from '../parser/command.parser.service';
 import { ParsedWorkflow, WorkflowDefinition, WorkflowStage, WorkflowStep } from '../parser/workflow.types';
+import { ClaudeTokenHealthService } from './claude-token-health.service';
 import { CommandRunnerService } from './command-runner.service';
 import { ExecutionStateService } from './execution-state.service';
 import {
@@ -17,7 +18,15 @@ import { LoggerContextService } from './logger-context.service';
 export class WorkflowExecutorService {
   private readonly logger = new Logger(WorkflowExecutorService.name);
 
-  constructor(private readonly state: ExecutionStateService, private readonly ctxLogger: LoggerContextService, private readonly fileLogger: FileLoggerService, private readonly commandRunner: CommandRunnerService, private readonly commandParser: CommandParserService, private readonly gitService: GitService) {}
+  constructor(
+    private readonly state: ExecutionStateService, 
+    private readonly ctxLogger: LoggerContextService, 
+    private readonly fileLogger: FileLoggerService, 
+    private readonly commandRunner: CommandRunnerService, 
+    private readonly commandParser: CommandParserService, 
+    private readonly gitService: GitService,
+    private readonly tokenHealthService: ClaudeTokenHealthService
+  ) {}
 
   async execute(parsed: ParsedWorkflow, options?: ExecutorOptions): Promise<void> {
     const workflow = parsed.workflow;
@@ -183,24 +192,43 @@ export class WorkflowExecutorService {
   }
 
   private async runStep(step: WorkflowStep, options?: ExecutorOptions, context?: { workflow?: string; stage?: string; step?: string }): Promise<void> {
-    // Claude action mapping
+    // Claude action mapping with automatic recovery
     if (step.type === 'claude' && step.action) {
       const timeoutSec = step.policy?.timeout?.seconds ?? 0;
       const timeoutMs = timeoutSec > 0 ? timeoutSec * 1000 : options?.defaultStepTimeoutMs;
-      const result = await this.commandRunner.runClaudeWithInput({
-        action: step.action as any,
-        prompt: step.prompt,
-        cwd: step.cwd,
-        env: step.env,
-        timeoutMs,
-        signal: options?.signal,
-        onStdoutLine: (line) => this.fileLogger.write('info', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stdout' } }),
-        onStderrLine: (line) => this.fileLogger.write('warn', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stderr' } }),
-      });
-      if (result.code !== 0) {
-        throw new Error(`Claude CLI exited with code ${result.code}`);
+      
+      try {
+        const result = await this.commandRunner.runClaudeWithRecovery({
+          action: step.action as any,
+          prompt: step.prompt,
+          cwd: step.cwd,
+          env: step.env,
+          timeoutMs,
+          signal: options?.signal,
+          onStdoutLine: (line) => this.fileLogger.write('info', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stdout' } }),
+          onStderrLine: (line) => this.fileLogger.write('warn', line, { workflow: context?.workflow, stage: context?.stage, step: context?.step, meta: { stream: 'stderr' } }),
+          enableRecovery: true, // 토큰 소진 시 자동 복구 활성화
+        });
+        
+        if (result.code !== 0) {
+          throw new Error(`Claude CLI exited with code ${result.code}`);
+        }
+        return;
+      } catch (error) {
+        // 토큰 소진 에러가 아닌 경우에만 에러를 던짐
+        if (!this.tokenHealthService.isTokenExhaustedError(error)) {
+          throw error;
+        }
+        
+        // 토큰 소진 에러는 이미 runClaudeWithRecovery에서 처리되었으므로
+        // 여기서는 로그만 기록하고 계속 진행
+        this.fileLogger.write('info', 'Claude token exhaustion handled by recovery service', { 
+          workflow: context?.workflow, 
+          stage: context?.stage, 
+          step: context?.step 
+        });
+        return;
       }
-      return;
     }
 
     // Generic run commands
