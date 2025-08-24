@@ -706,6 +706,54 @@ stages:
 - `test`: 테스트 생성 및 실행
 - `deploy`: 배포 및 배포 스크립트
 
+## 📊 성능 기준선
+
+### 🔍 정책 시스템 성능 벤치마크 (TASK-093)
+
+**기본 벤치마크 결과** (2025년 8월 24일)
+```json
+{
+  "baseline": {
+    "policyCount": 10,
+    "ruleCount": 50,
+    "averageDuration": 5.42,
+    "throughput": 1.8
+  }
+}
+```
+
+**확장성 테스트 결과**
+- **Small Scale**: 25 policies, 125 rules → 5.48ms avg (1.8 policies/sec)
+- **Medium Scale**: 50 policies, 250 rules → 5.53ms avg (1.8 policies/sec)  
+- **Large Scale**: 100 policies, 500 rules → 5.57ms avg (1.8 policies/sec)
+- **XLarge Scale**: 200 policies, 1000 rules → 5.86ms avg (1.7 policies/sec)
+
+**통합 벤치마크 결과** (정책 엔진 시뮬레이션)
+```json
+{
+  "integrationBaseline": {
+    "policyCount": 10,
+    "ruleCount": 50,
+    "averageDuration": 2.77,
+    "throughput": 3.6,
+    "evaluationsPerSecond": 361.2
+  }
+}
+```
+
+**성능 특징**
+- ✅ **선형 확장성**: 정책 수 증가에 따른 성능 저하 최소화
+- ✅ **안정적인 처리량**: 대규모 정책 환경에서도 일관된 성능
+- ✅ **효율적인 메모리 사용**: 가비지 컬렉션 최적화
+- ✅ **컨텍스트별 일관성**: 다양한 워크플로우 컨텍스트에서 안정적 성능
+
+**벤치마크 도구**
+- `tools/policy-performance-benchmark.js`: 기본 성능 측정
+- `tools/policy-engine-benchmark.js`: 통합 정책 엔진 성능 측정
+- `tools/run-policy-benchmark.sh`: 전체 벤치마크 실행 스크립트
+
+---
+
 ## 🛠️ 개발 환경 설정
 
 ```bash

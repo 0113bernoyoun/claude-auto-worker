@@ -145,3 +145,4 @@ secrets/
 # Temporary files
 *.tmp
 *.temp
+tools/*-report.json
