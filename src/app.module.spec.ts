@@ -1,8 +1,8 @@
 import { Test } from '@nestjs/testing';
-import { AppModule } from './app.module';
 import { AppController } from './app.controller';
+import { AppModule } from './app.module';
 import { AppService } from './app.service';
-import { ConfigModule } from '@nestjs/config';
+import { ProjectConfigService } from './config/project-config.service';
 
 describe('AppModule', () => {
   let module: AppModule;
@@ -37,12 +37,12 @@ describe('AppModule', () => {
     expect(service).toBeDefined();
   });
 
-  it('should import ConfigModule', async () => {
+  it('should have ConfigService', async () => {
     const moduleRef = await Test.createTestingModule({
       imports: [AppModule],
     }).compile();
 
-    const configModule = moduleRef.get(ConfigModule);
-    expect(configModule).toBeDefined();
+    const configService = moduleRef.get<ProjectConfigService>(ProjectConfigService);
+    expect(configService).toBeDefined();
   });
 });
