@@ -1,3 +1,6 @@
+[deprecated] This project has moved to: https://github.com/0113bernoyoun/AAW
+
+
 # 🤖 claude-auto-worker
 
 > 차세대 Claude Code 자동화 도구 - 안전하고, 유연하고, 확장 가능한 워크플로우 엔진
